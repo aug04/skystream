@@ -1100,10 +1100,9 @@ class PlayerController extends Notifier<PlayerState> {
       if (kDebugMode) debugPrint("Player Error: $error");
       if (error.toString().toLowerCase().contains("abort")) return;
 
-      final isAudioDecodeError = error
-          .toString()
-          .toLowerCase()
-          .contains('decoding audio');
+      final isAudioDecodeError = error.toString().toLowerCase().contains(
+        'decoding audio',
+      );
 
       // HE-AAC (AAC+SBR) streams trigger "Error decoding audio" because
       // FFmpeg initializes the codec in AAC-LC mode and then encounters SBR
@@ -1118,7 +1117,9 @@ class PlayerController extends Notifier<PlayerState> {
         );
         if (nextTrack != null) {
           if (kDebugMode) {
-            debugPrint('[Player] Audio decode error — trying next audio track: ${nextTrack.id} (${nextTrack.language})');
+            debugPrint(
+              '[Player] Audio decode error — trying next audio track: ${nextTrack.id} (${nextTrack.language})',
+            );
           }
           _player.setAudioTrack(nextTrack).catchError((_) {});
           return;
