@@ -11,7 +11,6 @@ class HomeSearchDelegate extends SearchDelegate<void> {
   HomeSearchDelegate()
     : super(
         searchFieldLabel: 'Search movies, series...',
-        searchFieldStyle: const TextStyle(color: Colors.white70, fontSize: 18),
       );
 
   @override
@@ -23,6 +22,12 @@ class HomeSearchDelegate extends SearchDelegate<void> {
         elevation: 0,
         iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
         toolbarHeight: 70,
+      ),
+      textTheme: theme.textTheme.copyWith(
+        titleLarge: TextStyle(
+          color: theme.colorScheme.onSurface,
+          fontSize: 18,
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: TextStyle(
