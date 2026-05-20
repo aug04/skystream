@@ -43,7 +43,6 @@ class AppTheme {
         backgroundColor: Color(0xFF18181F),
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(
-          fontFamily: 'Outfit',
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: Color(0xFFF9FAFB),
@@ -69,51 +68,51 @@ class AppTheme {
       colorScheme: colorScheme,
 
       // Typography
-      textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme)
+      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme)
           .copyWith(
-            displayLarge: GoogleFonts.outfit(
+            displayLarge: GoogleFonts.inter(
               fontSize: 32,
               fontWeight: FontWeight.bold,
               color: const Color(0xFFF9FAFB),
             ),
-            displayMedium: GoogleFonts.outfit(
+            displayMedium: GoogleFonts.inter(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: const Color(0xFFF9FAFB),
             ),
-            displaySmall: GoogleFonts.outfit(
+            displaySmall: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: const Color(0xFFF9FAFB),
             ),
-            headlineMedium: GoogleFonts.outfit(
+            headlineMedium: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.w600,
               color: const Color(0xFFF9FAFB),
             ),
-            titleLarge: GoogleFonts.outfit(
+            titleLarge: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: const Color(0xFFF9FAFB),
             ),
-            titleMedium: GoogleFonts.outfit(
+            titleMedium: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: const Color(0xFFF9FAFB),
             ),
-            bodyLarge: GoogleFonts.outfit(
+            bodyLarge: GoogleFonts.inter(
               fontSize: 16,
               color: const Color(0xFFE5E7EB),
             ),
-            bodyMedium: GoogleFonts.outfit(
+            bodyMedium: GoogleFonts.inter(
               fontSize: 14,
               color: const Color(0xFF9CA3AF),
             ),
-            bodySmall: GoogleFonts.outfit(
+            bodySmall: GoogleFonts.inter(
               fontSize: 12,
               color: const Color(0xFF6B7280),
             ),
-            labelLarge: GoogleFonts.outfit(
+            labelLarge: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.1,
@@ -192,7 +191,6 @@ class AppTheme {
         backgroundColor: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(
-          fontFamily: 'Outfit',
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: colorScheme.onSurface,
@@ -218,28 +216,28 @@ class AppTheme {
       colorScheme: colorScheme,
 
       // Typography
-      textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme)
+      textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme)
           .copyWith(
-            displayLarge: GoogleFonts.outfit(
+            displayLarge: GoogleFonts.inter(
               fontSize: 32,
               fontWeight: FontWeight.bold,
               color: lightTextPrimary,
             ),
-            headlineMedium: GoogleFonts.outfit(
+            headlineMedium: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.w600,
               color: lightTextPrimary,
             ),
-            titleLarge: GoogleFonts.outfit(
+            titleLarge: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: lightTextPrimary,
             ),
-            bodyLarge: GoogleFonts.outfit(
+            bodyLarge: GoogleFonts.inter(
               fontSize: 16,
               color: lightTextPrimary,
             ),
-            bodyMedium: GoogleFonts.outfit(
+            bodyMedium: GoogleFonts.inter(
               fontSize: 14,
               color: lightTextSecondary,
             ),
@@ -256,8 +254,6 @@ class AppTheme {
           color: lightTextPrimary,
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          fontFamily:
-              'Outfit', // Fallback or explicit if needed, but GoogleFonts covers it generally
         ),
       ),
 
