@@ -233,7 +233,7 @@ class SubtitleSearch extends _$SubtitleSearch {
 @riverpod
 class SubtitleLanguage extends _$SubtitleLanguage {
   @override
-  String build() => 'en';
+  String build() => 'vi';
 
   void set(String lang) => state = lang;
 }
