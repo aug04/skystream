@@ -114,13 +114,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: [
+						Tab(
+              text: AppLocalizations.of(context)!.bookmarks,
+              icon: const Icon(Icons.bookmark_rounded),
+            ),
             Tab(
               text: AppLocalizations.of(context)!.downloads,
               icon: const Icon(Icons.download_for_offline_rounded),
-            ),
-            Tab(
-              text: AppLocalizations.of(context)!.bookmarks,
-              icon: const Icon(Icons.bookmark_rounded),
             ),
           ],
         ),
@@ -131,7 +131,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
           _tabController.animateTo(index);
         },
         physics: const BouncingScrollPhysics(),
-        children: const [DownloadsTab(), BookmarksTab()],
+        children: const [BookmarksTab(), DownloadsTab()],
       ),
     );
   }
