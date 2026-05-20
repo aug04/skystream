@@ -99,32 +99,15 @@ jobs:
           echo "keyPassword=$ANDROID_KEY_PASSWORD" >> android/key.properties
           echo "keyAlias=$ANDROID_KEY_ALIAS" >> android/key.properties
           echo "storeFile=release.jks" >> android/key.properties
-
-      - name: Generate dart-defines file
-        shell: bash
-        run: |
-          cat > dart-defines.json << 'JSON_EOF'
-          {
-            "TMDB_API_KEY": "${{ secrets.TMDB_API_KEY }}",
-            "SIMKL_CLIENT_ID": "${{ secrets.SIMKL_CLIENT_ID }}",
-            "SIMKL_CLIENT_SECRET": "${{ secrets.SIMKL_CLIENT_SECRET }}",
-            "TRAKT_CLIENT_ID": "${{ secrets.TRAKT_CLIENT_ID }}",
-            "TRAKT_CLIENT_SECRET": "${{ secrets.TRAKT_CLIENT_SECRET }}",
-            "MAL_CLIENT_ID": "${{ secrets.MAL_CLIENT_ID }}",
-            "MAL_CLIENT_SECRET": "${{ secrets.MAL_CLIENT_SECRET }}",
-            "ANILIST_CLIENT_ID": "${{ secrets.ANILIST_CLIENT_ID }}",
-            "ANIMESKIP_CLIENT_ID": "${{ secrets.ANIMESKIP_CLIENT_ID }}"
-          }
-          JSON_EOF
-
+        
       - name: Build Split APKs
-        run: flutter build apk --release --split-per-abi --dart-define-from-file=dart-defines.json
+        run: flutter build apk --release --split-per-abi --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
 
-      - name: Build Universal APK
-        run: flutter build apk --release --dart-define-from-file=dart-defines.json
+      # - name: Build Universal APK
+      #  run: flutter build apk --release --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
 
-      - name: Build Debug APK
-        run: flutter build apk --debug --dart-define-from-file=dart-defines.json
+      # - name: Build Debug APK
+      #  run: flutter build apk --debug --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
 
       - name: Rename APKs
         run: |
@@ -132,14 +115,14 @@ jobs:
           cd build/app/outputs/flutter-apk/
           
           # Universal Release
-          if [ -f "app-release.apk" ]; then
-            mv "app-release.apk" "../../../../skystream-android-universal-${VERSION}.apk"
-          fi
+          # if [ -f "app-release.apk" ]; then
+          #  mv "app-release.apk" "../../../../skystream-android-universal-${VERSION}.apk"
+          # fi
           
           # Universal Debug
-          if [ -f "app-debug.apk" ]; then
-            mv "app-debug.apk" "../../../../skystream-android-debug-${VERSION}.apk"
-          fi
+          # if [ -f "app-debug.apk" ]; then
+          #  mv "app-debug.apk" "../../../../skystream-android-debug-${VERSION}.apk"
+          # fi
           
           # Splits
           for f in app-*-release.apk; do
@@ -182,27 +165,10 @@ jobs:
           flutter pub get
           flutter gen-l10n
           dart run build_runner build --delete-conflicting-outputs
-
-      - name: Generate dart-defines file
-        shell: bash
-        run: |
-          cat > dart-defines.json << 'JSON_EOF'
-          {
-            "TMDB_API_KEY": "${{ secrets.TMDB_API_KEY }}",
-            "SIMKL_CLIENT_ID": "${{ secrets.SIMKL_CLIENT_ID }}",
-            "SIMKL_CLIENT_SECRET": "${{ secrets.SIMKL_CLIENT_SECRET }}",
-            "TRAKT_CLIENT_ID": "${{ secrets.TRAKT_CLIENT_ID }}",
-            "TRAKT_CLIENT_SECRET": "${{ secrets.TRAKT_CLIENT_SECRET }}",
-            "MAL_CLIENT_ID": "${{ secrets.MAL_CLIENT_ID }}",
-            "MAL_CLIENT_SECRET": "${{ secrets.MAL_CLIENT_SECRET }}",
-            "ANILIST_CLIENT_ID": "${{ secrets.ANILIST_CLIENT_ID }}",
-            "ANIMESKIP_CLIENT_ID": "${{ secrets.ANIMESKIP_CLIENT_ID }}"
-          }
-          JSON_EOF
-
+        
       - name: Build iOS (No Codesign)
         run: |
-          flutter build ios --release --no-codesign --dart-define-from-file=dart-defines.json
+          flutter build ios --release --no-codesign --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
           mkdir -p Payload
           mv build/ios/iphoneos/Runner.app Payload/
           zip -r skystream-ios-unsigned-${{ needs.version.outputs.version }}.ipa Payload
@@ -259,28 +225,11 @@ jobs:
           find . -type f ! -name "${{ matrix.torrserver_binary }}" -delete
           ls -la
           
-      - name: Generate dart-defines file
-        shell: bash
-        run: |
-          cat > dart-defines.json << 'JSON_EOF'
-          {
-            "TMDB_API_KEY": "${{ secrets.TMDB_API_KEY }}",
-            "SIMKL_CLIENT_ID": "${{ secrets.SIMKL_CLIENT_ID }}",
-            "SIMKL_CLIENT_SECRET": "${{ secrets.SIMKL_CLIENT_SECRET }}",
-            "TRAKT_CLIENT_ID": "${{ secrets.TRAKT_CLIENT_ID }}",
-            "TRAKT_CLIENT_SECRET": "${{ secrets.TRAKT_CLIENT_SECRET }}",
-            "MAL_CLIENT_ID": "${{ secrets.MAL_CLIENT_ID }}",
-            "MAL_CLIENT_SECRET": "${{ secrets.MAL_CLIENT_SECRET }}",
-            "ANILIST_CLIENT_ID": "${{ secrets.ANILIST_CLIENT_ID }}",
-            "ANIMESKIP_CLIENT_ID": "${{ secrets.ANIMESKIP_CLIENT_ID }}"
-          }
-          JSON_EOF
-
       # Build for a single architecture to reduce app size from ~430MB (universal) to ~270MB
       - name: Build macOS (${{ matrix.arch }})
         run: |
           # First, generate the Xcode project with flutter
-          flutter build macos --release --config-only --dart-define-from-file=dart-defines.json
+          flutter build macos --release --config-only --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
           
           # Build using xcodebuild with single architecture
           cd macos
@@ -407,26 +356,9 @@ jobs:
 
           "SKYSTREAM_WINDOWS_MPV_DLL=$($dll.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           Write-Host "Using downloaded libmpv: $($dll.FullName)"
-
-      - name: Generate dart-defines file
-        shell: bash
-        run: |
-          cat > dart-defines.json << 'JSON_EOF'
-          {
-            "TMDB_API_KEY": "${{ secrets.TMDB_API_KEY }}",
-            "SIMKL_CLIENT_ID": "${{ secrets.SIMKL_CLIENT_ID }}",
-            "SIMKL_CLIENT_SECRET": "${{ secrets.SIMKL_CLIENT_SECRET }}",
-            "TRAKT_CLIENT_ID": "${{ secrets.TRAKT_CLIENT_ID }}",
-            "TRAKT_CLIENT_SECRET": "${{ secrets.TRAKT_CLIENT_SECRET }}",
-            "MAL_CLIENT_ID": "${{ secrets.MAL_CLIENT_ID }}",
-            "MAL_CLIENT_SECRET": "${{ secrets.MAL_CLIENT_SECRET }}",
-            "ANILIST_CLIENT_ID": "${{ secrets.ANILIST_CLIENT_ID }}",
-            "ANIMESKIP_CLIENT_ID": "${{ secrets.ANIMESKIP_CLIENT_ID }}"
-          }
-          JSON_EOF
-
+          
       - name: Build Windows
-        run: flutter build windows --release --dart-define-from-file=dart-defines.json
+        run: flutter build windows --release --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
 
       - name: Install Inno Setup
         shell: pwsh
@@ -485,16 +417,8 @@ jobs:
           echo "$RUNNER_TOOL_CACHE/flutter/bin" >> $GITHUB_PATH
       - name: Install Linux Dependencies
         run: |
-          # 1. Switch ports.ubuntu.com from HTTP (port 80 origin) to HTTPS (port 443 CDN) to prevent TCP resets
-          sudo sed -i 's|http://ports.ubuntu.com|https://ports.ubuntu.com|g' /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2>/dev/null || true
-          
-          # 2. Update package index and ensure failures halt execution instead of silently ignoring stale index errors
-          sudo apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30
-          
-          # 3. Install required libraries with --no-install-recommends to avoid fetching 190+ bloated recommended packages (tilix, pocketsphinx, etc.)
-          sudo apt-get install -y --no-install-recommends \
-            clang cmake ninja-build pkg-config \
-            libgtk-3-dev liblzma-dev libmpv-dev libasound2-dev libsecret-1-dev
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libmpv-dev libasound2-dev
           
       - name: Install Flutter Dependencies
         run: |
@@ -511,37 +435,20 @@ jobs:
           find . -type f ! -name "${{ matrix.torrserver_binary }}" -delete
           ls -la
           
-      - name: Generate dart-defines file
-        shell: bash
-        run: |
-          cat > dart-defines.json << 'JSON_EOF'
-          {
-            "TMDB_API_KEY": "${{ secrets.TMDB_API_KEY }}",
-            "SIMKL_CLIENT_ID": "${{ secrets.SIMKL_CLIENT_ID }}",
-            "SIMKL_CLIENT_SECRET": "${{ secrets.SIMKL_CLIENT_SECRET }}",
-            "TRAKT_CLIENT_ID": "${{ secrets.TRAKT_CLIENT_ID }}",
-            "TRAKT_CLIENT_SECRET": "${{ secrets.TRAKT_CLIENT_SECRET }}",
-            "MAL_CLIENT_ID": "${{ secrets.MAL_CLIENT_ID }}",
-            "MAL_CLIENT_SECRET": "${{ secrets.MAL_CLIENT_SECRET }}",
-            "ANILIST_CLIENT_ID": "${{ secrets.ANILIST_CLIENT_ID }}",
-            "ANIMESKIP_CLIENT_ID": "${{ secrets.ANIMESKIP_CLIENT_ID }}"
-          }
-          JSON_EOF
-
       - name: Build Linux Packages
         run: |
           VERSION="${{ needs.version.outputs.version }}"
           export PATH="$PATH:$HOME/.pub-cache/bin"
           dart pub global activate fastforge
-
+          
           # Build .deb (AppImage is currently disabled due to tool-level file collision bugs)
-          fastforge package --platform linux --targets deb --flutter-build-args=dart-define-from-file=dart-defines.json
-
+          fastforge package --platform linux --targets deb --build-dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
+          
           # Rename .deb file to match tar.gz convention
           mv dist/*/*.deb "skystream-linux-${{ matrix.arch }}-${VERSION}.deb"
-
+          
           # Generate the standard .tar.gz bundle as well
-          flutter build linux --release --dart-define-from-file=dart-defines.json
+          flutter build linux --release --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
           cd build/linux/${{ matrix.arch }}/release/bundle
           tar -czvf "../../../../../skystream-linux-${{ matrix.arch }}-${VERSION}.tar.gz" .
 
