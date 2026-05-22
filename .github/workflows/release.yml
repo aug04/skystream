@@ -118,7 +118,7 @@ jobs:
           echo "storeFile=release.jks" >> android/key.properties
         
       - name: Build Split APKs
-        run: flutter build apk --release --split-per-abi --build-cache --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
+        run: flutter build apk --release --split-per-abi --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
 
       # - name: Build Universal APK
       #  run: flutter build apk --release --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
@@ -203,7 +203,7 @@ jobs:
         
       - name: Build iOS (No Codesign)
         run: |
-          flutter build ios --release --no-codesign --build-cache --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
+          flutter build ios --release --no-codesign --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
           mkdir -p Payload
           mv build/ios/iphoneos/Runner.app Payload/
           zip -r skystream-ios-unsigned-${{ needs.version.outputs.version }}.ipa Payload
