@@ -3608,10 +3608,6 @@ class PlayerController extends Notifier<PlayerState> {
           ref.read(playerSettingsProvider).asData?.value ??
           const PlayerSettings();
 
-      await native.setProperty('sub-ass-force-margins', 'yes');
-      await native.setProperty('sub-margin-x', '60');
-      await native.setProperty('sub-margin-y', '40');
-
       // MPV sub properties
       await native.setProperty(
         'sub-font-size',

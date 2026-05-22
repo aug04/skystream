@@ -67,11 +67,6 @@ class PlayerSubtitleManager {
       } else {
         await native.setProperty('sub-back-color', '#00000000');
       }
-
-      await native.setProperty('sub-ass-override', 'force');
-      await native.setProperty('sub-scale-with-window', 'yes');
-      await native.setProperty('sub-margin-x', '50'); 
-      await native.setProperty('sub-margin-y', '45');
     }
   }
 
