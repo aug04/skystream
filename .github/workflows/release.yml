@@ -117,11 +117,11 @@ jobs:
           echo "keyAlias=$ANDROID_KEY_ALIAS" >> android/key.properties
           echo "storeFile=release.jks" >> android/key.properties
         
-      - name: Build Split APKs
-        run: flutter build apk --release --split-per-abi --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
+      #- name: Build Split APKs
+      #  run: flutter build apk --release --split-per-abi --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
 
-      # - name: Build Universal APK
-      #  run: flutter build apk --release --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
+      - name: Build Universal APK
+        run: flutter build apk --release --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
 
       # - name: Build Debug APK
       #  run: flutter build apk --debug --dart-define=TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}
@@ -132,9 +132,9 @@ jobs:
           cd build/app/outputs/flutter-apk/
           
           # Universal Release
-          # if [ -f "app-release.apk" ]; then
-          #  mv "app-release.apk" "../../../../skystream-android-universal-${VERSION}.apk"
-          # fi
+          if [ -f "app-release.apk" ]; then
+            mv "app-release.apk" "../../../../skystream-android-universal-${VERSION}.apk"
+          fi
           
           # Universal Debug
           # if [ -f "app-debug.apk" ]; then
@@ -142,14 +142,14 @@ jobs:
           # fi
           
           # Splits
-          for f in app-*-release.apk; do
-            if [ -f "$f" ]; then
-              # Extract ABI: app-<abi>-release.apk -> <abi>
-              abi="${f#app-}"
-              abi="${abi%-release.apk}"
-              mv "$f" "../../../../skystream-android-${abi}-${VERSION}.apk"
-            fi
-          done
+          # for f in app-*-release.apk; do
+          #   if [ -f "$f" ]; then
+          #     # Extract ABI: app-<abi>-release.apk -> <abi>
+          #     abi="${f#app-}"
+          #     abi="${abi%-release.apk}"
+          #     mv "$f" "../../../../skystream-android-${abi}-${VERSION}.apk"
+          #   fi
+          # done
 
       - name: Upload Release Assets
         uses: ncipollo/release-action@v1
