@@ -65,6 +65,11 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
 
     if (Platform.isAndroid || Platform.isIOS) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+      ));
     }
     WakelockPlus.enable();
 
@@ -292,58 +297,56 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
 
     if (errorMessage != null) {
       return Scaffold(
-        body: SafeArea(
-          child: Stack(
-            children: [
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: Colors.red,
-                        size: 56,
+        body: Stack(
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: 56,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      AppLocalizations.of(context)!.playbackError,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        AppLocalizations.of(context)!.playbackError,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        errorMessage,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        autofocus: true,
-                        onPressed: _handleBack,
-                        icon: const Icon(Icons.arrow_back),
-                        label: Text(AppLocalizations.of(context)!.goBack),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      errorMessage,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      autofocus: true,
+                      onPressed: _handleBack,
+                      icon: const Icon(Icons.arrow_back),
+                      label: Text(AppLocalizations.of(context)!.goBack),
+                    ),
+                  ],
                 ),
               ),
-              // Top-left back button — always visible for iOS/desktop
-              // where there may be no system back gesture.
-              Positioned(
-                top: 8,
-                left: 8,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  tooltip: AppLocalizations.of(context)!.goBack,
-                  onPressed: _handleBack,
-                ),
+            ),
+            // Top-left back button — always visible for iOS/desktop
+            // where there may be no system back gesture.
+            Positioned(
+              top: 8,
+              left: 8,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: AppLocalizations.of(context)!.goBack,
+                onPressed: _handleBack,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
