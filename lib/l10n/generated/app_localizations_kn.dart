@@ -96,6 +96,13 @@ class AppLocalizationsKn extends AppLocalizations {
   String get dohProvider => 'DoH ಪ್ರೊವೈಡರ್';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'ವಿಸ್ತರಣೆಗಳನ್ನು ನಿರ್ವಹಿಸಿ';
 
   @override
@@ -612,8 +619,7 @@ class AppLocalizationsKn extends AppLocalizations {
   String get noReposFound => 'ಯಾವುದೇ ರೆಪೊಸಿಟರಿಗಳು ಅಥವಾ ಪ್ಲಗಿನ್‌ಗಳು ಕಂಡುಬಂದಿಲ್ಲ';
 
   @override
-  String get downloadAllProviders =>
-      'ಲಭ್ಯವಿರುವ ಎಲ್ಲಾ ಪೂರೈಕೆದಾರರನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ';
+  String get downloadAllProviders => 'ಎಲ್ಲವನ್ನೂ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ';
 
   @override
   String get removeRepository => 'ರೆಪೊಸಿಟರಿಯನ್ನು ತೆಗೆದುಹಾಕಿ';
@@ -1094,6 +1100,15 @@ class AppLocalizationsKn extends AppLocalizations {
   String get skip => 'ಬಿಟ್ಟುಬಿಡಿ';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'ಲೈವ್ ಹೋಗಿ';
 
   @override
@@ -1142,6 +1157,9 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'ಉಪಶೀರ್ಷಿಕೆ ಖಾತೆಗಳು';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'ಲಾಗಿನ್ ಆಗಿಲ್ಲ';

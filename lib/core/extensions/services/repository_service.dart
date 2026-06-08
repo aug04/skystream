@@ -7,8 +7,9 @@ import '../models/extension_plugin.dart';
 
 class RepositoryService {
   final Dio _dio;
+  final bool enableGithubProxy;
 
-  RepositoryService(this._dio);
+  RepositoryService(this._dio, {this.enableGithubProxy = false});
 
   /// Resolves the actual URL from shortcodes or custom schemes
   Future<String?> parseRepoUrl(String url) async {
@@ -70,8 +71,8 @@ class RepositoryService {
 
       final response = await _dio.request<String>(normalizedUrl);
       if (response.statusCode == 200 && response.data != null) {
-        final data = response.data is String
-            ? _jsonDecodeSafe(response.data!)
+        final Map<String, dynamic>? data = response.data is String
+            ? _jsonDecodeSafe(response.data!) as Map<String, dynamic>?
             : response.data as Map<String, dynamic>;
 
         if (data != null) {
@@ -126,12 +127,17 @@ class RepositoryService {
 
         if (response.statusCode == 200 && response.data != null) {
           final List<dynamic>? list = response.data is String
-              ? _jsonDecodeSafe(response.data) as List<dynamic>?
+              ? _jsonDecodeSafe(response.data as String) as List<dynamic>?
               : response.data as List<dynamic>?;
 
           if (list != null) {
             final plugins = list
-                .map((e) => ExtensionPlugin.fromJson(e, repo.packageName))
+                .map(
+                  (e) => ExtensionPlugin.fromJson(
+                    e as Map<String, dynamic>,
+                    repo.packageName,
+                  ),
+                )
                 .toList();
             allPlugins.addAll(plugins);
           }
@@ -169,12 +175,18 @@ class RepositoryService {
   }
 
   String _normalizeUrl(String url) {
-    // Basic normalization, can be expanded to match Native's "convertRawGitUrl"
+    if (!enableGithubProxy) return url;
+    
+    // Convert raw.githubusercontent.com to jsdelivr for caching/performance
     if (url.contains('raw.githubusercontent.com')) {
-      // Native app converts to jsdelivr for caching/performance
-      // Regex: ^https://raw.githubusercontent.com/([A-Za-z0-9-]+)/([A-Za-z0-9_.-]+)/(.*)$
-      // Replacement: https://cdn.jsdelivr.net/gh/$1/$2@$3
-      // We can implement this later if needed for parity/performance
+      final regex = RegExp(r'^https://raw\.githubusercontent\.com/([A-Za-z0-9-]+)/([A-Za-z0-9_.-]+)/(.*)$');
+      final match = regex.firstMatch(url);
+      if (match != null) {
+        final user = match.group(1);
+        final repo = match.group(2);
+        final path = match.group(3);
+        return 'https://cdn.jsdelivr.net/gh/$user/$repo@$path';
+      }
     }
     return url;
   }

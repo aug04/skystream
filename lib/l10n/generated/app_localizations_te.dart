@@ -96,6 +96,13 @@ class AppLocalizationsTe extends AppLocalizations {
   String get dohProvider => 'DoH ప్రొవైడర్';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'ఎక్స్టెన్షన్స్‌ని నిర్వహించండి';
 
   @override
@@ -610,8 +617,7 @@ class AppLocalizationsTe extends AppLocalizations {
   String get noReposFound => 'రిపోజిటరీలు లేదా ప్లగిన్లు ఏమీ కనుగొనబడలేదు';
 
   @override
-  String get downloadAllProviders =>
-      'అందుబాటులో ఉన్న అన్ని ప్రొవైడర్లను డౌన్‌లోడ్ చేయండి';
+  String get downloadAllProviders => 'అన్నీ డౌన్‌లోడ్ చేయండి';
 
   @override
   String get removeRepository => 'రిపోజిటరీని తొలగించండి';
@@ -1092,6 +1098,15 @@ class AppLocalizationsTe extends AppLocalizations {
   String get skip => 'దాటవేయి';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'లైవ్ వెళ్ళండి';
 
   @override
@@ -1140,6 +1155,9 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'సబ్‌టైటిల్ ఖాతాలు';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'Not logged in';

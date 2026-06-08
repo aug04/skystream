@@ -8,10 +8,16 @@ import '../../../search/presentation/search_provider.dart';
 import 'package:skystream/shared/widgets/multimedia_card.dart';
 
 class HomeSearchDelegate extends SearchDelegate<void> {
-  HomeSearchDelegate()
+  final String? initialQuery;
+
+  HomeSearchDelegate({this.initialQuery})
     : super(
         searchFieldLabel: 'Search movies, series...',
-      );
+      ) {
+    if (initialQuery != null) {
+      query = initialQuery!;
+    }
+  }
 
   @override
   ThemeData appBarTheme(BuildContext context) {
@@ -151,17 +157,20 @@ class _HomeSearchSuggestionsState
       itemCount: suggestions.length,
       itemBuilder: (context, index) {
         final suggestion = suggestions[index];
-        return ListTile(
-          leading: const Icon(Icons.search_rounded),
-          title: Text(suggestion),
-          trailing: IconButton(
-            tooltip: 'Fill query',
-            icon: const Icon(Icons.north_west_rounded),
-            onPressed: () {
-              widget.onSelect(suggestion);
-            },
+        return Material(
+          type: MaterialType.transparency,
+          child: ListTile(
+            leading: const Icon(Icons.search_rounded),
+            title: Text(suggestion),
+            trailing: IconButton(
+              tooltip: 'Fill query',
+              icon: const Icon(Icons.north_west_rounded),
+              onPressed: () {
+                widget.onSelect(suggestion);
+              },
+            ),
+            onTap: () => widget.onSelect(suggestion),
           ),
-          onTap: () => widget.onSelect(suggestion),
         );
       },
     );
@@ -247,7 +256,7 @@ class _HomeSearchResultsState extends ConsumerState<_HomeSearchResults> {
 
     final isLarge = MediaQuery.of(context).size.width > 600;
     final maxExtent = isLarge ? 200.0 : 130.0;
-    
+
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
@@ -263,13 +272,12 @@ class _HomeSearchResultsState extends ConsumerState<_HomeSearchResults> {
 
         return MultimediaCard(
           key: ValueKey(item.url),
-          imageUrl: AppImageFallbacks.poster(
-            item.posterUrl,
-            label: item.title,
-          ),
+          imageUrl: AppImageFallbacks.poster(item.posterUrl, label: item.title),
           title: item.title,
           heroTag: uniqueTag,
-          onTap: () => DetailsRoute($extra: DetailsRouteExtra(item: item)).push<void>(context),
+          onTap: () => DetailsRoute(
+            $extra: DetailsRouteExtra(item: item),
+          ).push<void>(context),
         );
       },
     );

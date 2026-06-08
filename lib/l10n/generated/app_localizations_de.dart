@@ -96,6 +96,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dohProvider => 'DoH-Anbieter';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'Erweiterungen verwalten';
 
   @override
@@ -608,7 +615,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get noReposFound => 'Keine Repositorys oder Plugins gefunden';
 
   @override
-  String get downloadAllProviders => 'Alle verfügbaren Anbieter herunterladen';
+  String get downloadAllProviders => 'Alle herunterladen';
 
   @override
   String get removeRepository => 'Repository entfernen';
@@ -1093,6 +1100,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get skip => 'Überspringen';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'Live gehen';
 
   @override
@@ -1141,6 +1157,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'Untertitel-Konten';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'Nicht angemeldet';

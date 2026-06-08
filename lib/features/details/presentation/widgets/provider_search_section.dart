@@ -27,19 +27,29 @@ Stream<SearchAggregateState> providerSearch(Ref ref, String query) {
   var cancelled = false;
   ref.onDispose(() => cancelled = true);
 
-  return searchAllProviders(ref, query, manager, filter: SearchFilter.content, isCancelled: () => cancelled);
+  return searchAllProviders(
+    ref,
+    query,
+    manager,
+    filter: SearchFilter.content,
+    isCancelled: () => cancelled,
+  );
 }
 
 class ProviderSearchSection extends ConsumerStatefulWidget {
   final String query;
   final bool compact;
   final String? parentMediaType; // 'movie' or 'tv'
+  final int? tmdbId;
+  final String? imdbId;
 
   const ProviderSearchSection({
     super.key,
     required this.query,
     this.compact = false,
     this.parentMediaType,
+    this.tmdbId,
+    this.imdbId,
   });
 
   @override
@@ -149,7 +159,7 @@ class _ProviderSearchSectionState extends ConsumerState<ProviderSearchSection> {
 
                     return CardsWrapper(
                       onTap: () {
-                        // Enrich item with provider and content type before navigation
+                        // Enrich item with provider, content type, and metadata IDs before navigation
                         final enrichedItem = item.copyWith(
                           provider: providerName,
                           contentType: widget.parentMediaType != null
@@ -157,9 +167,12 @@ class _ProviderSearchSectionState extends ConsumerState<ProviderSearchSection> {
                                   widget.parentMediaType,
                                 )
                               : item.contentType,
+                          tmdbId: widget.tmdbId ?? item.tmdbId,
+                          imdbId: widget.imdbId ?? item.imdbId,
                         );
-                        DetailsRoute($extra: DetailsRouteExtra(item: enrichedItem))
-                            .push(context);
+                        DetailsRoute(
+                          $extra: DetailsRouteExtra(item: enrichedItem),
+                        ).push<void>(context);
                       },
                       child: SizedBox(
                         width: 220,
@@ -269,7 +282,9 @@ class _ProviderSearchSectionState extends ConsumerState<ProviderSearchSection> {
         ),
         error: (err, _) => Padding(
           padding: const EdgeInsets.all(LayoutConstants.spacingMd),
-          child: Text(AppLocalizations.of(context)!.errorPrefix(err.toString())),
+          child: Text(
+            AppLocalizations.of(context)!.errorPrefix(err.toString()),
+          ),
         ),
       );
     }

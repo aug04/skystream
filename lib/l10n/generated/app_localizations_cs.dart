@@ -96,6 +96,13 @@ class AppLocalizationsCs extends AppLocalizations {
   String get dohProvider => 'Poskytovatel DoH';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'Spravovat rozšíření';
 
   @override
@@ -603,7 +610,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get noReposFound => 'Nebyla nalezena žádná úložiště';
 
   @override
-  String get downloadAllProviders => 'Stáhnout všechny poskytovatele';
+  String get downloadAllProviders => 'Stáhnout vše';
 
   @override
   String get removeRepository => 'Odstranit úložiště';
@@ -1077,6 +1084,15 @@ class AppLocalizationsCs extends AppLocalizations {
   String get skip => 'Přeskočit';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'Živě';
 
   @override
@@ -1125,6 +1141,9 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'Účty titulků';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'Not logged in';

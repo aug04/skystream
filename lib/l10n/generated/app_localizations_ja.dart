@@ -96,6 +96,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get dohProvider => 'DoH プロバイダー';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => '拡張機能の管理';
 
   @override
@@ -591,7 +598,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noReposFound => 'リポジトリまたはプラグインが見つかりませんでした';
 
   @override
-  String get downloadAllProviders => 'すべてのプロバイダーをダウンロード';
+  String get downloadAllProviders => 'すべてダウンロード';
 
   @override
   String get removeRepository => 'リポジトリを削除';
@@ -1057,6 +1064,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get skip => 'スキップ';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'ライブへ移動';
 
   @override
@@ -1105,6 +1121,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get subtitleAccounts => '字幕アカウント';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'ログインしていません';

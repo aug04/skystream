@@ -96,6 +96,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get dohProvider => 'DoH 제공자';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => '확장 프로그램 관리';
 
   @override
@@ -591,7 +598,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get noReposFound => '저장소나 플러그인을 찾을 수 없습니다';
 
   @override
-  String get downloadAllProviders => '이용 가능한 모든 제공자 다운로드';
+  String get downloadAllProviders => '모두 다운로드';
 
   @override
   String get removeRepository => '저장소 제거';
@@ -1062,6 +1069,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get skip => '건너뛰기';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => '실시간 시청';
 
   @override
@@ -1110,6 +1126,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get subtitleAccounts => '자막 계정';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => '로그인되지 않음';

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -34,10 +36,12 @@ class DownloadLauncher {
     if (resolveUrl.isEmpty) return;
 
     bool isCanceled = false;
-    LoadingDialog.show(
-      context,
-      message: l10n.resolving,
-      onCancel: () => isCanceled = true,
+    unawaited(
+      LoadingDialog.show(
+        context,
+        message: l10n.resolving,
+        onCancel: () => isCanceled = true,
+      ),
     );
 
     try {
@@ -150,11 +154,12 @@ class DownloadLauncher {
     final navContext = rootNavigatorKey.currentContext ?? context;
 
     bool isCanceled = false;
-    showDialog<void>(
-      context: navContext,
-      barrierDismissible: false, // Block UI interaction
-      builder: (ctx) {
-        return PopScope(
+    unawaited(
+      showDialog<void>(
+        context: navContext,
+        barrierDismissible: false, // Block UI interaction
+        builder: (ctx) {
+          return PopScope(
           canPop: false,
           child: AlertDialog(
             content: Column(
@@ -173,7 +178,10 @@ class DownloadLauncher {
                   Navigator.of(ctx).pop();
                 },
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Text(l10n.cancel),
                 ),
               ),
@@ -181,6 +189,7 @@ class DownloadLauncher {
           ),
         );
       },
+      ),
     );
 
     final metadata = await downloadService
@@ -211,7 +220,7 @@ class DownloadLauncher {
 
     // 2. Show Confirmation Dialog
     if (finalContext.mounted) {
-      showDialog<void>(
+      unawaited(showDialog<void>(
         context: finalContext,
         builder: (ctx) => AlertDialog(
           title: Text(l10n.confirmDownload),
@@ -295,7 +304,7 @@ class DownloadLauncher {
             ),
           ],
         ),
-      );
+      ));
     }
   }
 
@@ -352,4 +361,3 @@ class DownloadLauncher {
     return '.mp4'; // Default
   }
 }
-

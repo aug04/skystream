@@ -10,11 +10,21 @@ import '../library_provider.dart';
 
 import '../library_state.dart';
 
-class BookmarksTab extends ConsumerWidget {
+class BookmarksTab extends ConsumerStatefulWidget {
   const BookmarksTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BookmarksTab> createState() => _BookmarksTabState();
+}
+
+class _BookmarksTabState extends ConsumerState<BookmarksTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
     final libraryState = ref.watch(libraryProvider);
     final isLarge = context.isTabletOrLarger;
     final double totalHeight = isLarge ? 180.0 : 150.0;
@@ -24,27 +34,29 @@ class BookmarksTab extends ConsumerWidget {
       LibraryError(message: final msg) => Center(child: Text(msg)),
       LibraryEmpty() => _buildEmpty(context),
       LibrarySuccess(items: final items) => GridView.builder(
-          padding: const EdgeInsets.all(LayoutConstants.spacingMd),
-          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: totalHeight,
-            childAspectRatio: 2 / 3.4,
-            crossAxisSpacing: LayoutConstants.spacingMd,
-            mainAxisSpacing: LayoutConstants.spacingMd,
-          ),
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            final item = items[index];
-            return MultimediaCard(
-              key: ValueKey(item.url),
-              imageUrl:
-                  AppImageFallbacks.poster(item.posterUrl, label: item.title) ??
-                  '',
-              title: item.title,
-              heroTag: 'lib_bookmark_${item.url}_$index',
-              onTap: () => DetailsRoute($extra: DetailsRouteExtra(item: item)).push(context),
-            );
-          },
+        padding: const EdgeInsets.all(LayoutConstants.spacingMd),
+        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: totalHeight,
+          childAspectRatio: 2 / 3.4,
+          crossAxisSpacing: LayoutConstants.spacingMd,
+          mainAxisSpacing: LayoutConstants.spacingMd,
         ),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          return MultimediaCard(
+            key: ValueKey(item.url),
+            imageUrl:
+                AppImageFallbacks.poster(item.posterUrl, label: item.title) ??
+                '',
+            title: item.title,
+            heroTag: 'lib_bookmark_${item.url}_$index',
+            onTap: () => DetailsRoute(
+              $extra: DetailsRouteExtra(item: item),
+            ).push<void>(context),
+          );
+        },
+      ),
     };
   }
 

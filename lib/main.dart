@@ -23,10 +23,20 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:skystream/l10n/generated/app_localizations.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/network/cloudflare_bypass.dart';
+import 'package:dpad/dpad.dart';
+import 'core/config/tmdb_config.dart';
+import 'core/providers/device_info_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
+
+  // Cap Flutter's image cache. Default is 1000 entries / 100 MB which is too
+  // generous for low-RAM TVs and even most phones — decoded TMDB posters fill
+  // it quickly. Tighter limits force earlier eviction and keep raster smooth.
+  PaintingBinding.instance.imageCache
+    ..maximumSize = 200
+    ..maximumSizeBytes = 50 * 1024 * 1024; // 50 MB
 
   // Silence logs in release mode
   if (kReleaseMode) {
@@ -160,6 +170,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
+    FocusManager.instance.addEarlyKeyEventHandler(_handleEarlyKeyEvent);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(downloadServiceProvider).init();
       _checkExtensionsUpdates();
@@ -167,13 +178,64 @@ class _MyAppState extends ConsumerState<MyApp> {
     });
   }
 
+  @override
+  void dispose() {
+    FocusManager.instance.removeEarlyKeyEventHandler(_handleEarlyKeyEvent);
+    super.dispose();
+  }
+
+  KeyEventResult _handleEarlyKeyEvent(KeyEvent event) {
+    final primaryFocus = FocusManager.instance.primaryFocus;
+    if (primaryFocus == null) {
+      return KeyEventResult.ignored;
+    }
+
+    final context = primaryFocus.context;
+    if (context == null || !context.mounted) {
+      return KeyEventResult.ignored;
+    }
+
+    final renderObject = context.findRenderObject();
+    if (renderObject == null) {
+      return KeyEventResult.ignored;
+    }
+
+    RenderObject? current = renderObject;
+    bool isLaidOut = true;
+    while (current != null) {
+      if (current is RenderBox && !current.hasSize) {
+        isLaidOut = false;
+        break;
+      }
+      final parent = current.parent;
+      if (parent is RenderObject) {
+        current = parent;
+      } else {
+        break;
+      }
+    }
+
+    if (!isLaidOut) {
+      if (kDebugMode) {
+        debugPrint(
+          '[FocusGuard] Consumed key event ${event.logicalKey.keyLabel} because primary focus context or its ancestor is not laid out.',
+        );
+      }
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
+  }
+
   Future<void> _checkAppUpdates() async {
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint('[Lifecycle] Starting _checkAppUpdates after 5s delay...');
+    }
     await Future<void>.delayed(const Duration(seconds: 5));
     if (!mounted) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('[Lifecycle] _checkAppUpdates aborted: MyApp unmounted');
+      }
       return;
     }
 
@@ -225,25 +287,38 @@ class _MyAppState extends ConsumerState<MyApp> {
     final themeMode = ref.watch(appThemeModeProvider);
     final appRouter = ref.watch(appRouterProvider);
     final locale = ref.watch(localeProvider);
+    final profileAsync = ref.watch(deviceProfileProvider);
+
+    // Mirror the resolved device profile into TmdbConfig's static cache so
+    // pure-utility URL builders (AppImageFallbacks, TmdbDetails ctor) pick
+    // TV / desktop-class image sizes once the async profile resolves.
+    // Until then they fall back to the mobile defaults — a few cold-start
+    // frames may use w1280 backdrops on TV before snapping to original.
+    ref.listen<AsyncValue<DeviceProfile>>(deviceProfileProvider, (prev, next) {
+      final value = next.value;
+      if (value != null) TmdbConfig.setProfile(value);
+    });
 
     // Reactive Listener: Keeps UpdateController alive and handles the UI side-effect
-    ref.listen<UpdateState>(updateControllerProvider, (previous, next) {
-      if (next is UpdateAvailable) {
-        final navContext = appRouter.routerDelegate.navigatorKey.currentContext;
-        if (navContext != null && navContext.mounted) {
-          if (kDebugMode)
-            debugPrint(
-              '[Lifecycle] State update detected: UpdateAvailable. Showing dialog.',
-            );
-          UpdateDialog.show(navContext, next.release);
-        } else {
-          if (kDebugMode)
-            debugPrint(
-              '[Lifecycle] Update available but navContext not ready/mounted.',
-            );
-        }
-      }
-    });
+    // ref.listen<UpdateState>(updateControllerProvider, (previous, next) {
+    //   if (next is UpdateAvailable) {
+    //     final navContext = appRouter.routerDelegate.navigatorKey.currentContext;
+    //     if (navContext != null && navContext.mounted) {
+    //       if (kDebugMode) {
+    //         debugPrint(
+    //           '[Lifecycle] State update detected: UpdateAvailable. Showing dialog.',
+    //         );
+    //       }
+    //       UpdateDialog.show(navContext, next.release);
+    //     } else {
+    //       if (kDebugMode) {
+    //         debugPrint(
+    //           '[Lifecycle] Update available but navContext not ready/mounted.',
+    //         );
+    //       }
+    //     }
+    //   }
+    // });
 
     return DynamicColorBuilder(
       builder: (lightDynamic, darkDynamic) {
@@ -252,7 +327,7 @@ class _MyAppState extends ConsumerState<MyApp> {
           darkScheme = darkDynamic;
         }
 
-        return MaterialApp.router(
+        final materialApp = MaterialApp.router(
           scaffoldMessengerKey: ref
               .read(notificationServiceProvider)
               .messengerKey,
@@ -272,7 +347,28 @@ class _MyAppState extends ConsumerState<MyApp> {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) {
+            final mq = MediaQuery.of(context);
+            Widget result = child!;
+
+            // Phase 1: Density override for TV devices
+            // Android TV often reports inflated pixel density; we clamp to 1.0 for standard scaling.
+            final profile = profileAsync.asData?.value;
+            if (profile?.isTv == true) {
+              result = MediaQuery(
+                data: mq.copyWith(
+                  devicePixelRatio: 1.0,
+                  textScaler: TextScaler.noScaling,
+                ),
+                child: result,
+              );
+            }
+
+            return result;
+          },
         );
+
+        return DpadNavigator(child: materialApp);
       },
     );
   }

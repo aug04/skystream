@@ -10,12 +10,12 @@ enum PlayerGesture { brightness, volume, none }
 /// Preferred playback quality tier. Plugins don't guarantee a specific
 /// quality but sources are sorted so the preferred tier is tried first.
 enum QualityPreference {
-  any,   // no preference — keep original order
-  q360,  // 360p
-  q480,  // 480p / SD
-  q720,  // 720p / HD
+  any, // no preference — keep original order
+  q360, // 360p
+  q480, // 480p / SD
+  q720, // 720p / HD
   q1080, // 1080p / FHD
-  q4k,   // 4K / UHD / 2160p
+  q4k, // 4K / UHD / 2160p
 }
 
 class PlayerSettings {
@@ -30,13 +30,28 @@ class PlayerSettings {
   final int subtitleBackgroundColor;
   final double subtitleBackgroundOpacity;
   final bool hardwareDecoding;
-  final String? preferredPlayer; // null = internal, 'vlc' / 'mpv' etc. = external
+  final String?
+  preferredPlayer; // null = internal, 'vlc' / 'mpv' etc. = external
   final int readaheadSeconds;
   final double subtitlePosition;
+
   /// Quality to prefer when on Wi-Fi. Default: 4K (best available).
   final QualityPreference wifiQuality;
+
   /// Quality to prefer when on mobile data. Default: 1080p.
   final QualityPreference mobileQuality;
+
+  /// When true, the progress-bar time header shows the remaining time
+  /// (e.g. "-1:23:45 / 2:00:00") instead of the elapsed time. Sticky
+  /// across sessions because users who prefer one view almost always
+  /// want it always.
+  final bool showRemainingTime;
+
+  /// Default playback speed restored on every new playback session.
+  /// 1.0 = normal. Stored as a double to support fractional values
+  /// (1.25, 1.5, 1.75, 2.0). Capped at the engine's supported range
+  /// at playback time (`maxPlaybackSpeed`).
+  final double defaultPlaybackSpeed;
 
   // Subtitle Accounts
   final String osUsername;
@@ -64,6 +79,8 @@ class PlayerSettings {
     this.subtitlePosition = 100.0,
     this.wifiQuality = QualityPreference.q4k,
     this.mobileQuality = QualityPreference.q1080,
+    this.showRemainingTime = false,
+    this.defaultPlaybackSpeed = 1.0,
     this.osUsername = '',
     this.osPassword = '',
     this.osApiKey = '',
@@ -91,6 +108,8 @@ class PlayerSettings {
     double? subtitlePosition,
     QualityPreference? wifiQuality,
     QualityPreference? mobileQuality,
+    bool? showRemainingTime,
+    double? defaultPlaybackSpeed,
     String? osUsername,
     String? osPassword,
     String? osApiKey,
@@ -120,6 +139,8 @@ class PlayerSettings {
       subtitlePosition: subtitlePosition ?? this.subtitlePosition,
       wifiQuality: wifiQuality ?? this.wifiQuality,
       mobileQuality: mobileQuality ?? this.mobileQuality,
+      showRemainingTime: showRemainingTime ?? this.showRemainingTime,
+      defaultPlaybackSpeed: defaultPlaybackSpeed ?? this.defaultPlaybackSpeed,
       osUsername: osUsername ?? this.osUsername,
       osPassword: osPassword ?? this.osPassword,
       osApiKey: osApiKey ?? this.osApiKey,
@@ -180,8 +201,9 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
     final subBg =
         (storage.getPlayerSetting('player_sub_bg') as num?)?.toInt() ??
         0x00000000;
-    final subBgOpacity = 
-        (storage.getPlayerSetting('player_sub_bg_opacity') as num?)?.toDouble() ??
+    final subBgOpacity =
+        (storage.getPlayerSetting('player_sub_bg_opacity') as num?)
+            ?.toDouble() ??
         0.5;
     final prefPlayer = storage.getPlayerSetting<String>('player_preferred');
     final swipeSeek =
@@ -197,8 +219,8 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
         storage.getPlayerSetting<int>('player_readahead', defaultValue: 180) ??
         180;
     final subPos =
-         (storage.getPlayerSetting('player_sub_pos') as num?)?.toDouble() ??
-         100.0;
+        (storage.getPlayerSetting('player_sub_pos') as num?)?.toDouble() ??
+        100.0;
     final wifiQ = _parseQuality(
       storage.getPlayerSetting<String>('player_wifi_quality'),
       QualityPreference.q4k,
@@ -207,10 +229,21 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
       storage.getPlayerSetting<String>('player_mobile_quality'),
       QualityPreference.q1080,
     );
+    final showRemaining =
+        storage.getPlayerSetting<bool>(
+          'player_show_remaining',
+          defaultValue: false,
+        ) ??
+        false;
+    final defaultSpeed =
+        (storage.getPlayerSetting('player_default_speed') as num?)
+            ?.toDouble() ??
+        1.0;
     final osUser = storage.getPlayerSetting<String>('player_os_user') ?? '';
     final osPass = storage.getPlayerSetting<String>('player_os_pass') ?? '';
     final osKey = storage.getPlayerSetting<String>('player_os_key') ?? '';
-    final dlEmail = storage.getPlayerSetting<String>('player_subdl_email') ?? '';
+    final dlEmail =
+        storage.getPlayerSetting<String>('player_subdl_email') ?? '';
     final dlPass = storage.getPlayerSetting<String>('player_subdl_pass') ?? '';
     final dlKey = storage.getPlayerSetting<String>('player_subdl_key') ?? '';
     final ssKey = storage.getPlayerSetting<String>('player_ss_key') ?? '';
@@ -232,6 +265,8 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
       subtitlePosition: subPos,
       wifiQuality: wifiQ,
       mobileQuality: mobileQ,
+      showRemainingTime: showRemaining,
+      defaultPlaybackSpeed: defaultSpeed,
       osUsername: osUser,
       osPassword: osPass,
       osApiKey: osKey,
@@ -277,7 +312,12 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
     state = AsyncData(state.requireValue.copyWith(hardwareDecoding: val));
   }
 
-  Future<void> setSubtitleSettings(double size, int color, int bg, [double? opacity]) async {
+  Future<void> setSubtitleSettings(
+    double size,
+    int color,
+    int bg, [
+    double? opacity,
+  ]) async {
     await _repository.setPlayerSetting('player_sub_size', size);
     await _repository.setPlayerSetting('player_sub_color', color);
     await _repository.setPlayerSetting('player_sub_bg', bg);
@@ -289,7 +329,8 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
         subtitleSize: size,
         subtitleColor: color,
         subtitleBackgroundColor: bg,
-        subtitleBackgroundOpacity: opacity ?? state.requireValue.subtitleBackgroundOpacity,
+        subtitleBackgroundOpacity:
+            opacity ?? state.requireValue.subtitleBackgroundOpacity,
       ),
     );
   }
@@ -297,7 +338,9 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
   Future<void> setPreferredPlayer(String? playerId) async {
     if (playerId == null) {
       await _repository.setPlayerSetting('player_preferred', null);
-      state = AsyncData(state.requireValue.copyWith(clearPreferredPlayer: true));
+      state = AsyncData(
+        state.requireValue.copyWith(clearPreferredPlayer: true),
+      );
     } else {
       await _repository.setPlayerSetting('player_preferred', playerId);
       state = AsyncData(state.requireValue.copyWith(preferredPlayer: playerId));
@@ -316,7 +359,9 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
 
   Future<void> setSubtitleBackgroundOpacity(double val) async {
     await _repository.setPlayerSetting('player_sub_bg_opacity', val);
-    state = AsyncData(state.requireValue.copyWith(subtitleBackgroundOpacity: val));
+    state = AsyncData(
+      state.requireValue.copyWith(subtitleBackgroundOpacity: val),
+    );
   }
 
   Future<void> resetSubtitleSettings() async {
@@ -348,25 +393,57 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
     state = AsyncData(state.requireValue.copyWith(mobileQuality: q));
   }
 
-  Future<void> setOpenSubtitlesCredentials(String user, String pass, [String? key]) async {
+  Future<void> setShowRemainingTime(bool val) async {
+    await _repository.setPlayerSetting('player_show_remaining', val);
+    state = AsyncData(state.requireValue.copyWith(showRemainingTime: val));
+  }
+
+  Future<void> setDefaultPlaybackSpeed(double speed) async {
+    await _repository.setPlayerSetting('player_default_speed', speed);
+    state = AsyncData(
+      state.requireValue.copyWith(defaultPlaybackSpeed: speed),
+    );
+  }
+
+  Future<void> setOpenSubtitlesCredentials(
+    String user,
+    String pass, [
+    String? key,
+  ]) async {
     await _repository.setPlayerSetting('player_os_user', user);
     await _repository.setPlayerSetting('player_os_pass', pass);
     if (key != null) {
       await _repository.setPlayerSetting('player_os_key', key);
     }
-    state = AsyncData(state.requireValue.copyWith(osUsername: user, osPassword: pass, osApiKey: key));
+    state = AsyncData(
+      state.requireValue.copyWith(
+        osUsername: user,
+        osPassword: pass,
+        osApiKey: key,
+      ),
+    );
   }
 
-  Future<void> setSubDlAuth({required String apiKey, String? email, String? pass}) async {
+  Future<void> setSubDlAuth({
+    required String apiKey,
+    String? email,
+    String? pass,
+  }) async {
     await _repository.setPlayerSetting('player_subdl_key', apiKey);
-    if (email != null) await _repository.setPlayerSetting('player_subdl_email', email);
-    if (pass != null) await _repository.setPlayerSetting('player_subdl_pass', pass);
-    
-    state = AsyncData(state.requireValue.copyWith(
-      subdlApiKey: apiKey,
-      subdlEmail: email ?? state.requireValue.subdlEmail, 
-      subdlPassword: pass ?? state.requireValue.subdlPassword,
-    ));
+    if (email != null) {
+      await _repository.setPlayerSetting('player_subdl_email', email);
+    }
+    if (pass != null) {
+      await _repository.setPlayerSetting('player_subdl_pass', pass);
+    }
+
+    state = AsyncData(
+      state.requireValue.copyWith(
+        subdlApiKey: apiKey,
+        subdlEmail: email ?? state.requireValue.subdlEmail,
+        subdlPassword: pass ?? state.requireValue.subdlPassword,
+      ),
+    );
   }
 
   Future<void> setSubDlApiKey(String key) async {
@@ -379,13 +456,25 @@ class PlayerSettingsNotifier extends _$PlayerSettingsNotifier {
     state = AsyncData(state.requireValue.copyWith(subsourceApiKey: key));
   }
 
-  Future<bool> verifyOpenSubtitles(String user, String pass, [String? key]) async {
+  Future<bool> verifyOpenSubtitles(
+    String user,
+    String pass, [
+    String? key,
+  ]) async {
     final dio = ref.read(dioClientProvider);
-    final provider = OpenSubtitlesProvider(dio, username: user, password: pass, apiKey: key);
+    final provider = OpenSubtitlesProvider(
+      dio,
+      username: user,
+      password: pass,
+      apiKey: key,
+    );
     return await provider.verifyCredentials();
   }
 
-  Future<({String? key, String? error})> verifySubDl(String email, String pass) async {
+  Future<({String? key, String? error})> verifySubDl(
+    String email,
+    String pass,
+  ) async {
     final dio = ref.read(dioClientProvider);
     final provider = SubDLProvider(dio, email: email, password: pass);
     return await provider.login(email, pass);

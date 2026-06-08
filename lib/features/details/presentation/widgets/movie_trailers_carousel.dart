@@ -34,7 +34,9 @@ class _MovieTrailersCarouselState extends State<MovieTrailersCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.isLoading && widget.trailers.isEmpty) return const SizedBox.shrink();
+    if (!widget.isLoading && widget.trailers.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     final isDesktop = context.isDesktop;
     final displayCount = widget.isLoading ? 3 : widget.trailers.length;
@@ -56,15 +58,24 @@ class _MovieTrailersCarouselState extends State<MovieTrailersCarousel> {
             height: 160,
             child: DesktopScrollWrapper(
               controller: _scrollController,
-              child: ListView.separated(
+              child: ListView.builder(
                 clipBehavior: Clip.none,
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
                 itemCount: displayCount,
-                separatorBuilder: (_, _) => const SizedBox(width: 16),
-                itemBuilder: (context, index) => widget.isLoading
-                    ? _buildShimmerItem(context, isDesktop: true)
-                    : _buildDesktopItem(context, index),
+                // 16:9 at height 160 → width ≈ 284, +16 spacing baked in.
+                itemExtent: 300,
+                itemBuilder: (context, index) {
+                  final child = widget.isLoading
+                      ? _buildShimmerItem(context, isDesktop: true)
+                      : _buildDesktopItem(context, index);
+                  return RepaintBoundary(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: child,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -120,9 +131,13 @@ class _MovieTrailersCarouselState extends State<MovieTrailersCarousel> {
               clipBehavior: Clip.none,
               scrollDirection: Axis.horizontal,
               itemCount: displayCount,
-              itemBuilder: (context, index) => widget.isLoading
-                  ? _buildShimmerItem(context, isDesktop: false)
-                  : _buildMobileItem(context, index),
+              // Mobile item is width:200 + margin-right:16 inside _buildMobileItem.
+              itemExtent: 216,
+              itemBuilder: (context, index) => RepaintBoundary(
+                child: widget.isLoading
+                    ? _buildShimmerItem(context, isDesktop: false)
+                    : _buildMobileItem(context, index),
+              ),
             ),
           ),
           const SizedBox(height: 32),
@@ -141,8 +156,10 @@ class _MovieTrailersCarouselState extends State<MovieTrailersCarousel> {
           await launchUrl(uri);
         }
       },
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
+      child: SizedBox(
+        // Matches itemExtent: 16:9 at row height 160 = 284 logical px.
+        width: 284,
+        height: 160,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: Stack(
@@ -151,6 +168,8 @@ class _MovieTrailersCarouselState extends State<MovieTrailersCarousel> {
               CachedNetworkImage(
                 imageUrl: 'https://img.youtube.com/vi/$key/mqdefault.jpg',
                 fit: BoxFit.cover,
+                // YouTube mqdefault is 320 px native; that's the source ceiling,
+                // memCacheWidth would only force downscale below that. Skip.
                 errorWidget: (_, _, _) => const ThumbnailErrorPlaceholder(),
               ),
               Container(color: Colors.black26),
@@ -190,6 +209,7 @@ class _MovieTrailersCarouselState extends State<MovieTrailersCarousel> {
               CachedNetworkImage(
                 imageUrl: thumbUrl,
                 fit: BoxFit.cover,
+                // /0.jpg is 480 px native; let CNI decode at source.
                 errorWidget: (_, _, _) =>
                     ThumbnailErrorPlaceholder(label: video.name),
               ),

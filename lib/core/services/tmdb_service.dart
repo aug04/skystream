@@ -15,28 +15,34 @@ class TmdbService {
   }
 
   Future<List<TmdbGenre>> getGenres({String language = 'en-US'}) async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/genre/movie/list',
-      queryParameters: {'api_key': TmdbConfig.apiKey, 'language': language},
-    );
-    if (response.statusCode == 200 && response.data != null) {
-      return (response.data!['genres'] as List)
-          .map((i) => TmdbGenre.fromJson(i))
-          .toList();
-    }
+    if (TmdbConfig.apiKey.isEmpty) return [];
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/genre/movie/list',
+        queryParameters: {'api_key': TmdbConfig.apiKey, 'language': language},
+      );
+      if (response.statusCode == 200 && response.data != null) {
+        return (response.data!['genres'] as List)
+            .map((dynamic i) => TmdbGenre.fromJson(i as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (_) {}
     return [];
   }
 
   Future<List<TmdbGenre>> getTvGenres({String language = 'en-US'}) async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/genre/tv/list',
-      queryParameters: {'api_key': TmdbConfig.apiKey, 'language': language},
-    );
-    if (response.statusCode == 200 && response.data != null) {
-      return (response.data!['genres'] as List)
-          .map((i) => TmdbGenre.fromJson(i))
-          .toList();
-    }
+    if (TmdbConfig.apiKey.isEmpty) return [];
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/genre/tv/list',
+        queryParameters: {'api_key': TmdbConfig.apiKey, 'language': language},
+      );
+      if (response.statusCode == 200 && response.data != null) {
+        return (response.data!['genres'] as List)
+            .map((dynamic i) => TmdbGenre.fromJson(i as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (_) {}
     return [];
   }
 
@@ -47,17 +53,20 @@ class TmdbService {
     String mediaType, {
     String language = 'en-US',
   }) async {
-    final langCode = language.split('-')[0];
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/$mediaType/$id',
-      queryParameters: {
-        'api_key': TmdbConfig.apiKey,
-        'language': 'en-US',
-        'append_to_response': 'images',
-        'include_image_language': '$langCode,null,en',
-      },
-    );
-    if (response.statusCode == 200) return response.data;
+    if (TmdbConfig.apiKey.isEmpty) return null;
+    try {
+      final langCode = language.split('-')[0];
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/$mediaType/$id',
+        queryParameters: {
+          'api_key': TmdbConfig.apiKey,
+          'language': 'en-US',
+          'append_to_response': 'images',
+          'include_image_language': '$langCode,null,en',
+        },
+      );
+      if (response.statusCode == 200) return response.data;
+    } catch (_) {}
     return null;
   }
 
@@ -67,8 +76,23 @@ class TmdbService {
     final iso = fullLanguageCode.split('-')[0].toLowerCase();
     const regional = {'kn', 'ml', 'bn', 'mr', 'pa', 'gu', 'or', 'as'};
     const major = {
-      'hi', 'ta', 'te', 'es', 'fr', 'de', 'it', 'ja', 'ko', 'ru', 'pt',
-      'zh', 'tr', 'ar', 'pl', 'nl', 'sv'
+      'hi',
+      'ta',
+      'te',
+      'es',
+      'fr',
+      'de',
+      'it',
+      'ja',
+      'ko',
+      'ru',
+      'pt',
+      'zh',
+      'tr',
+      'ar',
+      'pl',
+      'nl',
+      'sv',
     };
     if (iso == 'en') return 100;
     if (major.contains(iso)) return 25;
@@ -334,97 +358,105 @@ class TmdbService {
     // Clean up double spaces
     cleanQuery = cleanQuery.replaceAll(RegExp(r'\s+'), ' ');
 
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/search/multi',
-      queryParameters: {
-        'api_key': TmdbConfig.apiKey,
-        'language': language,
-        'query': cleanQuery,
-        'page': page,
-        'include_adult': false,
-      },
-    );
+    if (TmdbConfig.apiKey.isEmpty) return [];
 
-    if (response.statusCode == 200 && response.data != null) {
-      final rawResults = List<Map<String, dynamic>>.from(
-        response.data!['results'],
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/search/multi',
+        queryParameters: {
+          'api_key': TmdbConfig.apiKey,
+          'language': language,
+          'query': cleanQuery,
+          'page': page,
+          'include_adult': false,
+        },
       );
 
-      final List<Map<String, dynamic>> processedResults = [];
+      if (response.statusCode == 200 && response.data != null) {
+        final rawResults = List<Map<String, dynamic>>.from(
+          response.data!['results'] as List,
+        );
 
-      // Process results to handle 'person' type and flatten 'known_for'
-      for (final item in rawResults) {
-        final mediaType = item['media_type'];
+        final List<Map<String, dynamic>> processedResults = [];
 
-        if (mediaType == 'person') {
-          // Hero Search: Extract movies from person's known_for
-          if (item['known_for'] != null) {
-            final knownFor = List<Map<String, dynamic>>.from(item['known_for']);
-            for (final known in knownFor) {
-              // known_for items often miss media_type, infer if possible or default to movie
-              known['media_type'] ??= 'movie';
-              processedResults.add(known);
+        // Process results to handle 'person' type and flatten 'known_for'
+        for (final item in rawResults) {
+          final mediaType = item['media_type'];
+
+          if (mediaType == 'person') {
+            // Hero Search: Extract movies from person's known_for
+            if (item['known_for'] != null) {
+              final knownFor = List<Map<String, dynamic>>.from(
+                item['known_for'] as List,
+              );
+              for (final known in knownFor) {
+                // known_for items often miss media_type, infer if possible or default to movie
+                known['media_type'] ??= 'movie';
+                processedResults.add(known);
+              }
+            }
+          } else if (mediaType == 'movie' || mediaType == 'tv') {
+            processedResults.add(item);
+          }
+        }
+        final today = DateTime.now();
+
+        final finalResults = processedResults.where((item) {
+          final mediaType = item['media_type'];
+          if (mediaType != 'movie' && mediaType != 'tv') return false;
+
+          // --- Filter 1: Release Status (Existing logic) ---
+          String? dateStr;
+          if (mediaType == 'movie') {
+            dateStr = item['release_date'] as String?;
+          } else if (mediaType == 'tv') {
+            dateStr = item['first_air_date'] as String?;
+          }
+          if (dateStr == null || dateStr.isEmpty) return false;
+
+          // --- Filter 2: Year (New) ---
+          if (filterYear != null) {
+            try {
+              final date = DateTime.parse(dateStr);
+              // Allow +/- 1 year tolerance or exact match
+              // Actually strict year match is better for "Mark 2025"
+              if (date.year != filterYear) return false;
+            } catch (_) {
+              return false;
             }
           }
-        } else if (mediaType == 'movie' || mediaType == 'tv') {
-          processedResults.add(item);
-        }
-      }
-      final today = DateTime.now();
 
-      final finalResults = processedResults.where((item) {
-        final mediaType = item['media_type'];
-        if (mediaType != 'movie' && mediaType != 'tv') return false;
+          // --- Filter 3: Language (New) ---
+          if (filterLanguageCode != null) {
+            final originalLang = item['original_language'];
+            if (originalLang != filterLanguageCode) return false;
+          }
 
-        // --- Filter 1: Release Status (Existing logic) ---
-        String? dateStr;
-        if (mediaType == 'movie') {
-          dateStr = item['release_date'];
-        } else if (mediaType == 'tv') {
-          dateStr = item['first_air_date'];
-        }
-        if (dateStr == null || dateStr.isEmpty) return false;
-
-        // --- Filter 2: Year (New) ---
-        if (filterYear != null) {
+          // Future date check
           try {
             final date = DateTime.parse(dateStr);
-            // Allow +/- 1 year tolerance or exact match
-            // Actually strict year match is better for "Mark 2025"
-            if (date.year != filterYear) return false;
-          } catch (_) {
+            return date.isBefore(today);
+          } catch (e) {
             return false;
+          }
+        }).toList();
+
+        // Deduplicate results based on ID (Person's known_for might duplicate direct search results)
+        final seenParams = <String>{}; // unique key: id + type
+        final uniqueResults = <Map<String, dynamic>>[];
+        for (final item in finalResults) {
+          final key = '${item['id']}_${item['media_type']}';
+          if (!seenParams.contains(key)) {
+            seenParams.add(key);
+            uniqueResults.add(item);
           }
         }
 
-        // --- Filter 3: Language (New) ---
-        if (filterLanguageCode != null) {
-          final originalLang = item['original_language'];
-          if (originalLang != filterLanguageCode) return false;
-        }
-
-        // Future date check
-        try {
-          final date = DateTime.parse(dateStr);
-          return date.isBefore(today);
-        } catch (e) {
-          return false;
-        }
-      }).toList();
-
-      // Deduplicate results based on ID (Person's known_for might duplicate direct search results)
-      final seenParams = <String>{}; // unique key: id + type
-      final uniqueResults = <Map<String, dynamic>>[];
-      for (final item in finalResults) {
-        final key = '${item['id']}_${item['media_type']}';
-        if (!seenParams.contains(key)) {
-          seenParams.add(key);
-          uniqueResults.add(item);
-        }
+        return uniqueResults
+            .map((i) => MultimediaItem.fromTmdbJson(i))
+            .toList();
       }
-
-      return uniqueResults.map((i) => MultimediaItem.fromTmdbJson(i)).toList();
-    }
+    } catch (_) {}
     return [];
   }
 
@@ -461,7 +493,7 @@ class TmdbService {
       if (response.statusCode != 200 || response.data == null) return [];
 
       final results = List<Map<String, dynamic>>.from(
-        response.data!['results'] ?? const [],
+        (response.data!['results'] as List?) ?? const <dynamic>[],
       );
 
       final seen = <String>{};
@@ -526,13 +558,20 @@ class TmdbService {
     }
     if (minRating != null) query['vote_average.gte'] = minRating;
 
-    final response = await _dio.get<Map<String, dynamic>>(path, queryParameters: query);
+    if (TmdbConfig.apiKey.isEmpty) return [];
 
-    if (response.statusCode == 200 && response.data != null) {
-      return (response.data!['results'] as List)
-          .map((i) => MultimediaItem.fromTmdbJson(i as Map<String, dynamic>))
-          .toList();
-    }
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        path,
+        queryParameters: query,
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        return (response.data!['results'] as List)
+            .map((i) => MultimediaItem.fromTmdbJson(i as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (_) {}
     return [];
   }
 
@@ -542,19 +581,23 @@ class TmdbService {
     String language = 'en-US',
     int page = 1,
   }) async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      path,
-      queryParameters: {
-        'api_key': TmdbConfig.apiKey,
-        'language': language,
-        'page': page,
-      },
-    );
-    if (response.statusCode == 200 && response.data != null) {
-      return (response.data!['results'] as List)
-          .map((i) => MultimediaItem.fromTmdbJson(i as Map<String, dynamic>))
-          .toList();
-    }
+    if (TmdbConfig.apiKey.isEmpty) return [];
+
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        path,
+        queryParameters: {
+          'api_key': TmdbConfig.apiKey,
+          'language': language,
+          'page': page,
+        },
+      );
+      if (response.statusCode == 200 && response.data != null) {
+        return (response.data!['results'] as List)
+            .map((i) => MultimediaItem.fromTmdbJson(i as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (_) {}
     return [];
   }
 
@@ -563,19 +606,25 @@ class TmdbService {
     String language = 'en',
     String mediaType = 'movie',
   }) async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/$mediaType/$id/images',
-      queryParameters: {
-        'api_key': TmdbConfig.apiKey,
-        'include_image_language': '$language,null,en',
-      },
-    );
+    if (TmdbConfig.apiKey.isEmpty) return null;
 
-    final data = response.data;
-    if (response.statusCode == 200 && data != null) {
-      final logos = List<Map<String, dynamic>>.from(data['logos'] ?? []);
-      return pickBestLogo(logos, language);
-    }
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/$mediaType/$id/images',
+        queryParameters: {
+          'api_key': TmdbConfig.apiKey,
+          'include_image_language': '$language,null,en',
+        },
+      );
+
+      final data = response.data;
+      if (response.statusCode == 200 && data != null) {
+        final logos = List<Map<String, dynamic>>.from(
+          (data['logos'] as List?) ?? const <dynamic>[],
+        );
+        return pickBestLogo(logos, language);
+      }
+    } catch (_) {}
     return null;
   }
 
@@ -645,7 +694,7 @@ class TmdbService {
 
     // --- Priority 4: Any Wide PNG ---
     if (bestLogo.isEmpty) {
-      bestLogo = findLogo((l) => (l['aspect_ratio'] ?? 0) > 1);
+      bestLogo = findLogo((l) => (((l['aspect_ratio'] as num?) ?? 0) > 1));
     }
 
     // --- Fallback ---
@@ -663,17 +712,21 @@ class TmdbService {
     int movieId, {
     String language = 'en-US',
   }) async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/movie/$movieId',
-      queryParameters: {
-        'api_key': TmdbConfig.apiKey,
-        'language': language,
-        'append_to_response': 'credits,release_dates',
-      },
-    );
-    if (response.statusCode == 200) {
-      return response.data;
-    }
+    if (TmdbConfig.apiKey.isEmpty) return null;
+
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/movie/$movieId',
+        queryParameters: {
+          'api_key': TmdbConfig.apiKey,
+          'language': language,
+          'append_to_response': 'credits,release_dates',
+        },
+      );
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+    } catch (_) {}
     return null;
   }
 
@@ -681,18 +734,22 @@ class TmdbService {
     int movieId, {
     String language = 'en-US',
   }) async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/movie/$movieId',
-      queryParameters: {
-        'api_key': TmdbConfig.apiKey,
-        'language': language,
-        'append_to_response': 'videos,images,translations',
-        'include_image_language': '$language,null,en',
-      },
-    );
-    if (response.statusCode == 200) {
-      return response.data;
-    }
+    if (TmdbConfig.apiKey.isEmpty) return null;
+
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/movie/$movieId',
+        queryParameters: {
+          'api_key': TmdbConfig.apiKey,
+          'language': language,
+          'append_to_response': 'videos,images,translations,external_ids',
+          'include_image_language': '$language,null,en',
+        },
+      );
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+    } catch (_) {}
     return null;
   }
 
@@ -701,13 +758,17 @@ class TmdbService {
     int movieId, {
     String language = 'en-US',
   }) async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/movie/$movieId/credits',
-      queryParameters: {'api_key': TmdbConfig.apiKey, 'language': language},
-    );
-    if (response.statusCode == 200) {
-      return response.data;
-    }
+    if (TmdbConfig.apiKey.isEmpty) return null;
+
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/movie/$movieId/credits',
+        queryParameters: {'api_key': TmdbConfig.apiKey, 'language': language},
+      );
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+    } catch (_) {}
     return null;
   }
 
@@ -715,17 +776,21 @@ class TmdbService {
     int tvId, {
     String language = 'en-US',
   }) async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/tv/$tvId',
-      queryParameters: {
-        'api_key': TmdbConfig.apiKey,
-        'language': language,
-        'append_to_response': 'credits,content_ratings',
-      },
-    );
-    if (response.statusCode == 200) {
-      return response.data;
-    }
+    if (TmdbConfig.apiKey.isEmpty) return null;
+
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/tv/$tvId',
+        queryParameters: {
+          'api_key': TmdbConfig.apiKey,
+          'language': language,
+          'append_to_response': 'credits,content_ratings',
+        },
+      );
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+    } catch (_) {}
     return null;
   }
 
@@ -733,18 +798,22 @@ class TmdbService {
     int tvId, {
     String language = 'en-US',
   }) async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/tv/$tvId',
-      queryParameters: {
-        'api_key': TmdbConfig.apiKey,
-        'language': language,
-        'append_to_response': 'videos,images,translations',
-        'include_image_language': '$language,null,en',
-      },
-    );
-    if (response.statusCode == 200) {
-      return response.data;
-    }
+    if (TmdbConfig.apiKey.isEmpty) return null;
+
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/tv/$tvId',
+        queryParameters: {
+          'api_key': TmdbConfig.apiKey,
+          'language': language,
+          'append_to_response': 'videos,images,translations,external_ids',
+          'include_image_language': '$language,null,en',
+        },
+      );
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+    } catch (_) {}
     return null;
   }
 
@@ -753,13 +822,17 @@ class TmdbService {
     int seasonNumber, {
     String language = 'en-US',
   }) async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/tv/$tvId/season/$seasonNumber',
-      queryParameters: {'api_key': TmdbConfig.apiKey, 'language': language},
-    );
-    if (response.statusCode == 200) {
-      return response.data;
-    }
+    if (TmdbConfig.apiKey.isEmpty) return null;
+
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/tv/$tvId/season/$seasonNumber',
+        queryParameters: {'api_key': TmdbConfig.apiKey, 'language': language},
+      );
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+    } catch (_) {}
     return null;
   }
 }

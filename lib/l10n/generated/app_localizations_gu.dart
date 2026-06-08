@@ -96,6 +96,13 @@ class AppLocalizationsGu extends AppLocalizations {
   String get dohProvider => 'DoH પ્રદાતા';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'એક્સટેન્શન મેનેજ કરો';
 
   @override
@@ -604,7 +611,7 @@ class AppLocalizationsGu extends AppLocalizations {
   String get noReposFound => 'કોઈ રિપોઝિટરી અથવા પ્લગઈન્સ મળ્યા નથી';
 
   @override
-  String get downloadAllProviders => 'બધા ઉપલબ્ધ પ્રદાતાઓ ડાઉનલોડ કરો';
+  String get downloadAllProviders => 'બધું ડાઉનલોડ કરો';
 
   @override
   String get removeRepository => 'રિપોઝિટરી દૂર કરો';
@@ -1088,6 +1095,15 @@ class AppLocalizationsGu extends AppLocalizations {
   String get skip => 'છોડી દો';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'લાઇવ જાઓ';
 
   @override
@@ -1136,6 +1152,9 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'સબટાઈટલ એકાઉન્ટ્સ';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'લોગ ઇન નથી';

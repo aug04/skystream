@@ -349,6 +349,18 @@ abstract class AppLocalizations {
   /// **'DoH Provider'**
   String get dohProvider;
 
+  /// No description provided for @githubProxy.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub Proxy'**
+  String get githubProxy;
+
+  /// No description provided for @githubProxySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Route extension downloads through jsDelivr to bypass ISP blocks.'**
+  String get githubProxySubtitle;
+
   /// No description provided for @manageExtensions.
   ///
   /// In en, this message translates to:
@@ -1306,7 +1318,7 @@ abstract class AppLocalizations {
   /// No description provided for @downloadAllProviders.
   ///
   /// In en, this message translates to:
-  /// **'Download All available providers'**
+  /// **'Download All'**
   String get downloadAllProviders;
 
   /// No description provided for @removeRepository.
@@ -2125,6 +2137,24 @@ abstract class AppLocalizations {
   /// **'Skip'**
   String get skip;
 
+  /// No description provided for @skipIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip Intro'**
+  String get skipIntro;
+
+  /// No description provided for @skipOutro.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip Outro'**
+  String get skipOutro;
+
+  /// No description provided for @skipRecap.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip Recap'**
+  String get skipRecap;
+
   /// No description provided for @goLive.
   ///
   /// In en, this message translates to:
@@ -2220,6 +2250,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Subtitle Accounts'**
   String get subtitleAccounts;
+
+  /// No description provided for @accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get accounts;
 
   /// No description provided for @notLoggedIn.
   ///

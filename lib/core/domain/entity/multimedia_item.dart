@@ -1,4 +1,7 @@
 import 'package:html_unescape/html_unescape.dart';
+import 'package:collection/collection.dart';
+
+import '../../config/tmdb_config.dart';
 
 enum MultimediaContentType { movie, series, anime, livestream, other }
 
@@ -105,6 +108,7 @@ class MultimediaItem {
   final List<StreamResult>? streams;
 
   final int? tmdbId;
+  final String? imdbId;
 
   MultimediaItem({
     required this.title,
@@ -132,6 +136,7 @@ class MultimediaItem {
     this.nextAiring,
     this.streams,
     this.tmdbId,
+    this.imdbId,
   }) : episodes = episodes != null
            ? (List<Episode>.from(episodes)..sort((a, b) {
                if (a.season != b.season) return a.season.compareTo(b.season);
@@ -227,24 +232,33 @@ class MultimediaItem {
             )
           : null,
       tmdbId: json['tmdbId'] as int?,
+      imdbId: json['imdbId'] as String?,
     );
   }
 
   factory MultimediaItem.fromTmdbJson(Map<String, dynamic> json) {
     final String mTypeStr =
-        json['media_type'] ?? (json['title'] != null ? 'movie' : 'tv');
-    final title = _unescape.convert(json['title'] ?? json['name'] ?? 'Unknown');
-    final date = json['release_date'] ?? json['first_air_date'] ?? '';
+        (json['media_type'] as String?) ??
+        (json['title'] != null ? 'movie' : 'tv');
+    final title = _unescape.convert(
+      (json['title'] as String?) ??
+          (json['name'] as String?) ??
+          'Unknown',
+    );
+    final date =
+        (json['release_date'] as String?) ??
+        (json['first_air_date'] as String?) ??
+        '';
     final year = int.tryParse(date.split('-').first);
-    final posterPath = json['poster_path'];
-    final backdropPath = json['backdrop_path'];
+    final posterPath = json['poster_path'] as String?;
+    final backdropPath = json['backdrop_path'] as String?;
 
     // Using simple logic for now, we'll eventually use AppImageFallbacks once we unify more
     final posterUrl = posterPath != null
-        ? 'https://image.tmdb.org/t/p/w500$posterPath'
+        ? '${TmdbConfig.posterSizeUrl}$posterPath'
         : '';
     final bannerUrl = backdropPath != null
-        ? 'https://image.tmdb.org/t/p/w1280$backdropPath'
+        ? '${TmdbConfig.backdropSizeUrl}$backdropPath'
         : posterUrl;
 
     return MultimediaItem(
@@ -257,6 +271,7 @@ class MultimediaItem {
       year: year,
       score: (json['vote_average'] as num?)?.toDouble(),
       tmdbId: json['id'] as int?,
+      imdbId: json['imdbId'] as String?,
     );
   }
 
@@ -333,6 +348,7 @@ class MultimediaItem {
     NextAiring? nextAiring,
     List<StreamResult>? streams,
     int? tmdbId,
+    String? imdbId,
   }) {
     return MultimediaItem(
       title: title ?? this.title,
@@ -360,6 +376,7 @@ class MultimediaItem {
       nextAiring: nextAiring ?? this.nextAiring,
       streams: streams ?? this.streams,
       tmdbId: tmdbId ?? this.tmdbId,
+      imdbId: imdbId ?? this.imdbId,
     );
   }
 
@@ -388,6 +405,8 @@ class MultimediaItem {
       'playbackPolicy': playbackPolicy,
       'isAdult': isAdult,
       'nextAiring': nextAiring?.toJson(),
+      'tmdbId': tmdbId,
+      'imdbId': imdbId,
       'streams': streams?.map((s) => s.toJson()).toList(),
     };
   }
@@ -400,14 +419,23 @@ class MultimediaItem {
           url == other.url &&
           title == other.title &&
           posterUrl == other.posterUrl &&
-          provider == other.provider;
+          provider == other.provider &&
+          tmdbId == other.tmdbId &&
+          imdbId == other.imdbId &&
+          const MapEquality<String, String>().equals(
+            syncData,
+            other.syncData,
+          );
 
   @override
   int get hashCode =>
       url.hashCode ^
       title.hashCode ^
       posterUrl.hashCode ^
-      (provider?.hashCode ?? 0);
+      (provider?.hashCode ?? 0) ^
+      (tmdbId?.hashCode ?? 0) ^
+      (imdbId?.hashCode ?? 0) ^
+      const MapEquality<String, String>().hash(syncData);
 }
 
 class Episode {
@@ -590,9 +618,9 @@ class SubtitleFile {
 
   factory SubtitleFile.fromJson(Map<String, dynamic> json) {
     return SubtitleFile(
-      url: json['url'] ?? '',
-      label: json['label'] ?? 'Unknown',
-      lang: json['lang'],
+      url: (json['url'] as String?) ?? '',
+      label: (json['label'] as String?) ?? 'Unknown',
+      lang: json['lang'] as String?,
     );
   }
 }

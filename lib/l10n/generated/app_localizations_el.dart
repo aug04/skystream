@@ -96,6 +96,13 @@ class AppLocalizationsEl extends AppLocalizations {
   String get dohProvider => 'Πάροχος DoH';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'Διαχείριση επεκτάσεων';
 
   @override
@@ -608,7 +615,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get noReposFound => 'Δεν βρέθηκαν αποθετήρια ή πρόσθετα';
 
   @override
-  String get downloadAllProviders => 'Λήψη όλων των διαθέσιμων παρόχων';
+  String get downloadAllProviders => 'Λήψη όλων';
 
   @override
   String get removeRepository => 'Αφαίρεση αποθετηρίου';
@@ -1094,6 +1101,15 @@ class AppLocalizationsEl extends AppLocalizations {
   String get skip => 'Παράλειψη';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'Ζωντανά';
 
   @override
@@ -1142,6 +1158,9 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'Λογαριασμοί υποτίτλων';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'Not logged in';

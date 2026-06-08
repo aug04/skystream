@@ -96,6 +96,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get dohProvider => 'DoH Sağlayıcısı';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'Eklentileri Yönet';
 
   @override
@@ -608,7 +615,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noReposFound => 'Depo veya eklenti bulunamadı';
 
   @override
-  String get downloadAllProviders => 'Mevcut tüm sağlayıcıları indir';
+  String get downloadAllProviders => 'Tümünü indir';
 
   @override
   String get removeRepository => 'Depoyu Kaldır';
@@ -1088,6 +1095,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get skip => 'Atla';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'Canlıya Geç';
 
   @override
@@ -1136,6 +1152,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'Altyazı hesapları';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'Not logged in';

@@ -96,6 +96,13 @@ class AppLocalizationsLv extends AppLocalizations {
   String get dohProvider => 'DoH pakalpojumu sniedzējs';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'Pārvaldīt paplašinājumus';
 
   @override
@@ -608,7 +615,7 @@ class AppLocalizationsLv extends AppLocalizations {
   String get noReposFound => 'Netika atrasti krātuves vai spraudņi';
 
   @override
-  String get downloadAllProviders => 'Lejupielādēt visus pieejamos sniedzējus';
+  String get downloadAllProviders => 'Lejupielādēt visu';
 
   @override
   String get removeRepository => 'Noņemt krātuvi';
@@ -1080,6 +1087,15 @@ class AppLocalizationsLv extends AppLocalizations {
   String get skip => 'Izlaist';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'Tiešraide';
 
   @override
@@ -1128,6 +1144,9 @@ class AppLocalizationsLv extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'Subtitru konti';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'Not logged in';

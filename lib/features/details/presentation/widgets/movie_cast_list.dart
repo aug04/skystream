@@ -36,7 +36,9 @@ class _MovieCastListState extends State<MovieCastList> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.isLoading && widget.cast.isEmpty) return const SizedBox.shrink();
+    if (!widget.isLoading && widget.cast.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     final isDesktop = context.isDesktop;
     final displayCount = widget.isLoading ? 6 : widget.cast.length;
@@ -58,15 +60,24 @@ class _MovieCastListState extends State<MovieCastList> {
             height: 140, // Height for Cast Cards
             child: DesktopScrollWrapper(
               controller: _scrollController,
-              child: ListView.separated(
+              child: ListView.builder(
                 clipBehavior: Clip.none,
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
                 itemCount: displayCount,
-                separatorBuilder: (_, _) => const SizedBox(width: 16),
-                itemBuilder: (context, index) => widget.isLoading
-                    ? _buildShimmerItem(context, isDesktop: true)
-                    : _buildDesktopItem(context, index),
+                // Fixed item width (80) + spacing (16) baked in via padding.
+                itemExtent: 96,
+                itemBuilder: (context, index) {
+                  final child = widget.isLoading
+                      ? _buildShimmerItem(context, isDesktop: true)
+                      : _buildDesktopItem(context, index);
+                  return RepaintBoundary(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: child,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -87,9 +98,13 @@ class _MovieCastListState extends State<MovieCastList> {
               clipBehavior: Clip.none,
               scrollDirection: Axis.horizontal,
               itemCount: displayCount,
-              itemBuilder: (context, index) => widget.isLoading
-                  ? _buildShimmerItem(context, isDesktop: false)
-                  : _buildMobileItem(context, index),
+              // Item is width:90 + margin-right:16 inside _buildMobileItem.
+              itemExtent: 106,
+              itemBuilder: (context, index) => RepaintBoundary(
+                child: widget.isLoading
+                    ? _buildShimmerItem(context, isDesktop: false)
+                    : _buildMobileItem(context, index),
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -111,6 +126,8 @@ class _MovieCastListState extends State<MovieCastList> {
               imageUrl: actor.profileImageUrl ?? '',
               width: 80,
               height: 80,
+              // No memCacheWidth — TMDB profile source is already w185 which
+              // matches 80 dp × 3 DPR. Forcing smaller blurs on hi-DPR.
               fit: BoxFit.cover,
               errorWidget: (_, _, _) =>
                   ThumbnailErrorPlaceholder(label: actor.name, iconSize: 30),
@@ -158,6 +175,7 @@ class _MovieCastListState extends State<MovieCastList> {
                 imageUrl: member.profileImageUrl ?? '',
                 width: 70,
                 height: 70,
+                // No memCacheWidth — see desktop branch above.
                 fit: BoxFit.cover,
                 errorWidget: (_, _, _) =>
                     ThumbnailErrorPlaceholder(label: member.name, iconSize: 30),

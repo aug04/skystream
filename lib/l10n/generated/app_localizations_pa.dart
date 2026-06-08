@@ -96,6 +96,13 @@ class AppLocalizationsPa extends AppLocalizations {
   String get dohProvider => 'DoH ਪ੍ਰਦਾਤਾ';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'ਐਕਸਟੈਂਸ਼ਨਾਂ ਦਾ ਪ੍ਰਬੰਧਨ ਕਰੋ';
 
   @override
@@ -604,7 +611,7 @@ class AppLocalizationsPa extends AppLocalizations {
   String get noReposFound => 'ਕੋਈ ਰਿਪੋਜ਼ਟਰੀ ਜਾਂ ਪਲੱਗਇਨ ਨਹੀਂ ਮਿਲਿਆ';
 
   @override
-  String get downloadAllProviders => 'ਸਾਰੇ ਉਪਲਬਧ ਪ੍ਰਦਾਤਾ ਡਾਊਨਲੋਡ ਕਰੋ';
+  String get downloadAllProviders => 'ਸਭ ਡਾਊਨਲੋਡ ਕਰੋ';
 
   @override
   String get removeRepository => 'ਰਿਪੋਜ਼ਟਰੀ ਹਟਾਓ';
@@ -1091,6 +1098,15 @@ class AppLocalizationsPa extends AppLocalizations {
   String get skip => 'ਛੱਡੋ';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'ਲਾਈਵ ਜਾਓ';
 
   @override
@@ -1139,6 +1155,9 @@ class AppLocalizationsPa extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'ਸਬਟਾਈਟਲ ਖਾਤੇ';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'Not logged in';

@@ -96,6 +96,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dohProvider => 'Nhà cung cấp DoH';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'Quản lý tiện ích';
 
   @override
@@ -598,7 +605,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get noReposFound => 'Không tìm thấy kho lưu trữ hoặc plugin nào';
 
   @override
-  String get downloadAllProviders => 'Tải xuống tất cả các nguồn có sẵn';
+  String get downloadAllProviders => 'Tải xuống tất cả';
 
   @override
   String get removeRepository => 'Xóa kho lưu trữ';
@@ -1069,6 +1076,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get skip => 'Bỏ qua';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'Xem trực tiếp';
 
   @override
@@ -1117,6 +1133,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'Tài khoản phụ đề';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'Not logged in';

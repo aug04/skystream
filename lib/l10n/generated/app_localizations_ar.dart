@@ -96,6 +96,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dohProvider => 'مزود DoH';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'إدارة الإضافات';
 
   @override
@@ -604,7 +611,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noReposFound => 'لم يتم العثور على مستودعات أو إضافات';
 
   @override
-  String get downloadAllProviders => 'تنزيل جميع المزودين المتاحين';
+  String get downloadAllProviders => 'تنزيل الكل';
 
   @override
   String get removeRepository => 'إزالة المستودع';
@@ -1079,6 +1086,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get skip => 'تخطي';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'البث المباشر';
 
   @override
@@ -1127,6 +1143,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'حسابات الترجمة';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'غير مسجّل الدخول';
@@ -1810,7 +1829,7 @@ class AppLocalizationsArApc extends AppLocalizationsAr {
   String get noReposFound => 'ما في مستودعات';
 
   @override
-  String get downloadAllProviders => 'تحميل كل المتاحين';
+  String get downloadAllProviders => 'تحميل الكل';
 
   @override
   String get removeRepository => 'حذف المستودع';

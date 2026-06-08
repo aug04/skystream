@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -58,6 +59,53 @@ class LocalProxyService {
     }
   }
 
+  /// Stop the proxy and release the bound port. The proxy is a singleton
+  /// reused across player sessions, so this is normally only called on app
+  /// shutdown (audit B4 — port stays bound for the app lifetime otherwise,
+  /// which only matters on desktop / long-running app processes).
+  Future<void> shutdown() async {
+    final server = _server;
+    _server = null;
+    _serverPort = 0;
+    _playlists.clear();
+    if (server != null) {
+      try {
+        await server.close(force: true);
+        if (kDebugMode) debugPrint("LocalProxyService: shut down cleanly");
+      } catch (e) {
+        if (kDebugMode) debugPrint("LocalProxyService: shutdown error: $e");
+      }
+    }
+  }
+
+  /// Allow-list for incoming request schemes / hosts. We only serve to
+  /// in-process media_kit (which connects to 127.0.0.1) — any request from
+  /// another origin would mean a local web page is trying to scrape our
+  /// stream URLs (audit B4). Returning false → 403 in the handler.
+  bool _isAllowedOrigin(HttpRequest request) {
+    // Only accept loopback connections at the socket level. The Dart
+    // HttpServer is already bound to loopbackIPv4, but we double-check the
+    // remote address here in case future code binds to anyAddress.
+    final remote = request.connectionInfo?.remoteAddress;
+    if (remote == null) return false;
+    if (remote.isLoopback) return true;
+    // Fail closed.
+    return false;
+  }
+
+  /// Validates that a proxy `?url=...` parameter points at a network resource
+  /// the proxy should fetch. Rejects `javascript:`, `file:`, `data:`, and
+  /// anything that's not a syntactically valid http(s) URL. Audit B4.
+  bool _isProxyableUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return false;
+    if (!uri.hasScheme) return false;
+    final scheme = uri.scheme.toLowerCase();
+    if (scheme != 'http' && scheme != 'https') return false;
+    if (uri.host.isEmpty) return false;
+    return true;
+  }
+
   /// Stores a generated M3U8 content and returns the local URL to access it.
   String serveM3u8(String content) {
     if (_server == null) startServer(); // Ensure started
@@ -109,6 +157,14 @@ class LocalProxyService {
 
   Future<void> _handleRequest(HttpRequest request) async {
     try {
+      // Reject any non-loopback caller — defence-in-depth on top of the
+      // loopback bind. Audit B4.
+      if (!_isAllowedOrigin(request)) {
+        request.response.statusCode = HttpStatus.forbidden;
+        unawaited(request.response.close());
+        return;
+      }
+
       final path = request.uri.path;
 
       // PROXY HANDLER
@@ -125,12 +181,12 @@ class LocalProxyService {
       }
 
       request.response.statusCode = HttpStatus.notFound;
-      request.response.close();
+      unawaited(request.response.close());
     } catch (e) {
       if (kDebugMode) debugPrint("LocalProxyService: Server Error: $e");
       try {
         request.response.statusCode = HttpStatus.internalServerError;
-        request.response.close();
+        unawaited(request.response.close());
       } catch (e) {
         if (kDebugMode) {
           debugPrint(
@@ -148,20 +204,39 @@ class LocalProxyService {
       request.response.headers.contentType = ContentType(
         "application",
         "vnd.apple.mpegurl",
+        charset: "utf-8",
       );
-      request.response.headers.add("Access-Control-Allow-Origin", "*");
-      request.response.write(content);
+      // Scope CORS to the local proxy origin. media_kit / video_view make
+      // requests in-process; no legitimate cross-origin browser should be
+      // hitting these URLs. Audit B4.
+      request.response.headers.add(
+        "Access-Control-Allow-Origin",
+        "http://127.0.0.1:$_serverPort",
+      );
+      request.response.add(utf8.encode(content));
     } else {
       request.response.statusCode = HttpStatus.notFound;
     }
-    request.response.close();
+    unawaited(request.response.close());
   }
 
   Future<void> _handleProxyRequest(HttpRequest request) async {
     final targetUrl = request.uri.queryParameters['url'];
     if (targetUrl == null) {
       request.response.statusCode = HttpStatus.badRequest;
-      request.response.close();
+      unawaited(request.response.close());
+      return;
+    }
+
+    // Scheme / shape validation — block file://, javascript:, data: and any
+    // other non-network scheme that a malicious plugin could embed in a
+    // stream URL it returns to us. Audit B4.
+    if (!_isProxyableUrl(targetUrl)) {
+      if (kDebugMode) {
+        debugPrint("[PROXY] Rejecting non-proxyable URL: $targetUrl");
+      }
+      request.response.statusCode = HttpStatus.badRequest;
+      unawaited(request.response.close());
       return;
     }
 
@@ -172,7 +247,8 @@ class LocalProxyService {
     if (hBase64 != null) {
       try {
         final decoded = utf8.decode(base64Url.decode(hBase64));
-        final Map<String, dynamic> map = jsonDecode(decoded);
+        final Map<String, dynamic> map =
+            jsonDecode(decoded) as Map<String, dynamic>;
         map.forEach((key, value) => stickyHeaders[key] = value.toString());
       } catch (e) {
         if (kDebugMode) {
@@ -186,7 +262,9 @@ class LocalProxyService {
     if (oBase64 != null) {
       try {
         final decoded = utf8.decode(base64Url.decode(oBase64));
-        options = ProxyOptions.fromJson(jsonDecode(decoded));
+        options = ProxyOptions.fromJson(
+          jsonDecode(decoded) as Map<String, dynamic>,
+        );
       } catch (e) {
         if (kDebugMode) debugPrint("[PROXY] Failed to parse options: $e");
       }
@@ -196,6 +274,12 @@ class LocalProxyService {
     final isRequestM3u8 = targetUrl.toLowerCase().contains(".m3u8");
 
     final client = HttpClient();
+    // Bound the upstream so a stuck CDN can't freeze the player UI
+    // indefinitely (audit B4). Connection: 10 s, idle: 30 s. These cover
+    // the long tail of slow but eventually-responsive providers without
+    // hanging on truly dead hosts.
+    client.connectionTimeout = const Duration(seconds: 10);
+    client.idleTimeout = const Duration(seconds: 30);
     // For M3U8: autoUncompress=true so gzip-encoded playlists arrive as UTF-8
     // text we can parse and rewrite. Content-Length is stripped for M3U8
     // responses (body is rewritten, size changes).
@@ -281,7 +365,9 @@ class LocalProxyService {
         final rangeHeader = req.headers.value('range');
         if (rangeHeader != null) {
           debugPrint('[PROXY] Range request: $rangeHeader → $targetUrl');
-          debugPrint('[PROXY] accept-encoding: ${req.headers.value('accept-encoding')}');
+          debugPrint(
+            '[PROXY] accept-encoding: ${req.headers.value('accept-encoding')}',
+          );
         }
       }
       final response = await _fetchWithRedirects(
@@ -293,7 +379,9 @@ class LocalProxyService {
       if (kDebugMode) {
         final rangeHeader = req.headers.value('range');
         if (rangeHeader != null) {
-          debugPrint('[PROXY] CDN responded: ${response.statusCode}, content-range: ${response.headers.value('content-range')}');
+          debugPrint(
+            '[PROXY] CDN responded: ${response.statusCode}, content-range: ${response.headers.value('content-range')}',
+          );
         }
         debugPrint(
           "[PROXY] Response Status: ${response.statusCode}, Content-Type: ${response.headers.contentType}",
@@ -323,16 +411,16 @@ class LocalProxyService {
       // and decoder errors. Diagnostic: 206 + chunked + content-range without
       // content-length. In that case the response is effectively the full
       // file, so convert to 200 and drop the misleading content-range.
-      final hasChunkedEncoding = response.headers
+      final hasChunkedEncoding =
+          response.headers
               .value('transfer-encoding')
               ?.toLowerCase()
               .contains('chunked') ==
           true;
-      final hasContentRange =
-          response.headers.value('content-range') != null;
-      final hasContentLength =
-          response.headers.value('content-length') != null;
-      final misleadingContentRange = !isResponseM3u8 &&
+      final hasContentRange = response.headers.value('content-range') != null;
+      final hasContentLength = response.headers.value('content-length') != null;
+      final misleadingContentRange =
+          !isResponseM3u8 &&
           response.statusCode == 206 &&
           hasChunkedEncoding &&
           hasContentRange &&
@@ -362,7 +450,8 @@ class LocalProxyService {
       // must forward content-length as-is: mpv relies on it to build the
       // byte-offset table for seeking. Stripping it makes mpv treat the stream
       // as "linear" and refuse backward seeks.
-      final wasGzip = response.headers
+      final wasGzip =
+          response.headers
               .value('content-encoding')
               ?.toLowerCase()
               .contains('gzip') ==
@@ -373,7 +462,9 @@ class LocalProxyService {
         if (lowerName == 'transfer-encoding') return;
         // Strip content-length when gzip (size changed after decompress) or M3U8
         // (body will be rewritten). Keep it for binary content so mpv can seek.
-        if (lowerName == 'content-length' && (wasGzip || isResponseM3u8)) return;
+        if (lowerName == 'content-length' && (wasGzip || isResponseM3u8)) {
+          return;
+        }
         // Strip content-encoding only when we actually decompressed gzip.
         // Forwarding "Content-Encoding: gzip" with a plain body causes mpv to
         // attempt decompression and corrupt the data.
@@ -384,7 +475,11 @@ class LocalProxyService {
           request.response.headers.add(name, value);
         }
       });
-      request.response.headers.add("Access-Control-Allow-Origin", "*");
+      // Scope CORS to local proxy origin only — see _handlePlaylistRequest.
+      request.response.headers.add(
+        "Access-Control-Allow-Origin",
+        "http://127.0.0.1:$_serverPort",
+      );
 
       // Allow rewriting for 200 (OK) and 206 (Partial) if it's an M3U8
       if (isResponseM3u8 &&
@@ -395,6 +490,7 @@ class LocalProxyService {
         request.response.headers.contentType = ContentType(
           "application",
           "vnd.apple.mpegurl",
+          charset: "utf-8",
         );
         await _rewriteM3u8Response(
           response,
@@ -604,7 +700,7 @@ class LocalProxyService {
         })
         .join('\n');
 
-    clientRequest.response.write(rewritten);
+    clientRequest.response.add(utf8.encode(rewritten));
     await clientRequest.response.close();
     // debugPrint("[PROXY] M3U8 Rewrite Complete for: $originalUrl");
   }

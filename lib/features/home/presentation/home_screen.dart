@@ -1,15 +1,22 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'home_provider.dart';
 import 'home_state.dart';
 import 'package:skystream/features/home/presentation/widgets/continue_watching_section.dart';
+import 'package:skystream/features/search/presentation/search_provider.dart';
+import 'package:skystream/features/tracking/data/sync_manager.dart';
+import 'package:skystream/features/tracking/domain/sync_progress_item.dart';
+import 'package:skystream/features/home/presentation/widgets/synced_progress_section.dart';
 import 'package:skystream/features/library/presentation/history_provider.dart';
 import '../../settings/presentation/general_settings_provider.dart';
 import '../../explore/presentation/widgets/explore_carousel.dart';
 import '../../explore/presentation/widgets/media_horizontal_list.dart';
 import '../../explore/presentation/view_all_screen.dart';
 import '../../../shared/widgets/desktop_scroll_wrapper.dart';
+import '../../extensions/providers/extensions_controller.dart';
+import '../../../core/extensions/models/extension_plugin.dart';
 
 import 'package:flutter/rendering.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -18,8 +25,13 @@ import 'package:skystream/core/extensions/base_provider.dart';
 import 'package:skystream/core/router/app_router.dart';
 import 'delegates/home_search_delegate.dart';
 import '../../../shared/widgets/cards_wrapper.dart';
+import '../../../shared/widgets/custom_widgets.dart';
+import '../../../shared/widgets/shimmer_placeholder.dart';
 import '../../../../core/utils/layout_constants.dart';
+import '../../../../core/utils/responsive_breakpoints.dart';
+import '../../../../core/providers/device_info_provider.dart';
 import 'dart:async';
+import 'widgets/dashboard_header_bar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -31,8 +43,13 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
-  final ValueNotifier<bool> _isScrolledNotifier = ValueNotifier<bool>(false);
+  final ValueNotifier<double> _appBarOpacityNotifier = ValueNotifier<double>(0);
   final ValueNotifier<bool> _isFabExtended = ValueNotifier<bool>(true);
+  final FocusNode _firstActionFocusNode = FocusNode();
+
+  /// Carousel controller exposed by ExploreCarousel via [onControllerReady].
+  /// Used by DashboardHeaderBar arrows.
+  CarouselSliderController? _carouselController;
 
   @override
   bool get wantKeepAlive => true;
@@ -43,16 +60,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _scrollController.addListener(_onScroll);
   }
 
+  bool _isWidescreenForScroll() {
+    final profile = ref.read(deviceProfileProvider).asData?.value;
+    final isTv = profile?.isTv == true || context.isTv;
+    return isTv || profile?.isLargeScreen == true || context.isTabletOrLarger;
+  }
+
   void _onScroll() {
     if (!_scrollController.hasClients) return;
 
-    // Status Bar Logic
-    final isScrolled = _scrollController.offset > 200;
-    if (isScrolled != _isScrolledNotifier.value) {
-      _isScrolledNotifier.value = isScrolled;
+    // On widescreen there is no mobile AppBar (opacity notifier) and no FAB
+    // (extended notifier). Skip all work to avoid per-frame overhead that
+    // can stall the rendering pipeline during bounce / direction-change.
+    if (_isWidescreenForScroll()) return;
+
+    final opacity = (_scrollController.offset * 0.8 / 300).clamp(0.0, 1.0);
+    if (opacity != _appBarOpacityNotifier.value) {
+      _appBarOpacityNotifier.value = opacity;
     }
 
-    // FAB Logic — uses ValueNotifier to avoid full-tree setState rebuild
     if (_scrollController.position.userScrollDirection ==
             ScrollDirection.reverse &&
         _isFabExtended.value) {
@@ -68,16 +94,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _isScrolledNotifier.dispose();
+    _appBarOpacityNotifier.dispose();
     _isFabExtended.dispose();
+    _firstActionFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    super.build(context);
     final homeDataAsync = ref.watch(homeDataProvider);
     final history = ref.watch(watchHistoryProvider);
+    final syncedProgressAsync = ref.watch(syncedProgressProvider);
     final generalSettings = ref.watch(generalSettingsProvider);
     final l10n = AppLocalizations.of(context)!;
 
@@ -86,6 +114,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ? SystemUiOverlayStyle.light
         : SystemUiOverlayStyle.dark;
 
+    final profile = ref.watch(deviceProfileProvider).asData?.value;
+    final isTv = profile?.isTv == true || context.isTv;
+    // Use profile?.isLargeScreen so this matches AppScaffold's sidebar
+    // decision even when the HomeScreen's context width is narrowed
+    // by the sidebar (e.g. iPad portrait).
+    final isWidescreen =
+        isTv || profile?.isLargeScreen == true || context.isTabletOrLarger;
+
+    // On widescreen: no AppBar, no FAB — we use the DashboardHeaderBar instead.
+    // The header lives outside the scroll view in a plain Column so there is
+    // no SliverPersistentHeader / pinned-header interaction with scroll
+    // physics (which was causing scroll-direction-change jitter on iPad).
+    if (isWidescreen) {
+      return Scaffold(
+        extendBodyBehindAppBar: false,
+        backgroundColor: Colors.transparent,
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: DashboardHeaderBar(
+                searchFocusNode: _firstActionFocusNode,
+                onShowProviderSelector: () =>
+                    _showProviderSelector(context, ref),
+                onPrevious: _carouselController != null
+                    ? () => _carouselController!.previousPage()
+                    : null,
+                onNext: _carouselController != null
+                    ? () => _carouselController!.nextPage()
+                    : null,
+              ),
+            ),
+            Expanded(
+              child: _buildBody(
+                context,
+                homeDataAsync,
+                history,
+                generalSettings.watchHistoryEnabled,
+                syncedProgressAsync,
+                isWidescreen: true,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Mobile layout: existing AppBar + FAB
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -93,22 +169,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         forceMaterialTransparency: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        flexibleSpace: ValueListenableBuilder<bool>(
-          valueListenable: _isScrolledNotifier,
-          builder: (context, isScrolled, child) {
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              color: isScrolled
-                  ? Theme.of(context).scaffoldBackgroundColor
-                  : Colors.transparent,
-            );
-          },
+        flexibleSpace: ValueListenableBuilder<double>(
+          valueListenable: _appBarOpacityNotifier,
+          // Apply the fade via the color's alpha channel rather than an
+          // Opacity widget. Opacity forces a saveLayer() every frame for as
+          // long as the AppBar is in the tree (even at opacity 1.0), which
+          // shows up on the perf overlay as a constant raster cost. Alpha
+          // blending on a Container fill costs ~0.
+          builder: (context, opacity, _) => Container(
+            color: Theme.of(
+              context,
+            ).scaffoldBackgroundColor.withValues(alpha: opacity),
+          ),
         ),
         title: Text(l10n.appTitle),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: LayoutConstants.spacingMd),
             child: CardsWrapper(
+              focusNode: _firstActionFocusNode,
               onTap: () {
                 unawaited(
                   showSearch<void>(
@@ -141,7 +220,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           return Material(
             elevation: 4,
             color: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).dialogTheme.backgroundColor
+                ? Theme.of(context).colorScheme.surfaceDim
                 : Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             child: InkWell(
@@ -232,6 +311,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         homeDataAsync,
         history,
         generalSettings.watchHistoryEnabled,
+        syncedProgressAsync,
       ),
     );
   }
@@ -241,7 +321,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     HomeState state,
     List<dynamic> history,
     bool watchHistoryEnabled,
-  ) {
+    AsyncValue<List<SyncProgressItem>> syncedProgressAsync, {
+    bool isWidescreen = false,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final isResolving = ref.watch(providerResolutionLoadingProvider);
 
@@ -254,12 +336,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
 
     if (ref.watch(activeProviderProvider) == null) {
-      return _buildNoProviderState(context, l10n);
+      return _buildNoProviderState(context, l10n, isWidescreen: isWidescreen);
     }
 
     return switch (state) {
-      HomeLoading() => const Center(child: CircularProgressIndicator()),
-      HomeNoProvider() => _buildNoProviderState(context, l10n),
+      HomeLoading() => CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          SliverToBoxAdapter(child: _buildCarouselShimmer(context)),
+          SliverToBoxAdapter(child: _buildListShimmer(context)),
+          SliverToBoxAdapter(child: _buildListShimmer(context)),
+          SliverToBoxAdapter(child: _buildListShimmer(context)),
+        ],
+      ),
+      HomeNoProvider() => _buildNoProviderState(
+        context,
+        l10n,
+        isWidescreen: isWidescreen,
+      ),
       HomeOffline() => _buildErrorState(context, l10n.noInternetError, ref),
       HomeError(:final message) => _buildErrorState(context, message, ref),
       HomeSuccess(:final data) => RefreshIndicator(
@@ -267,12 +361,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
-            // Carousel
             if (data.containsKey('Trending'))
               SliverToBoxAdapter(
                 child: ExploreCarousel(
                   movies: data['Trending']!.take(7).toList(),
                   scrollController: _scrollController,
+                  onNavigateUp: () => _firstActionFocusNode.requestFocus(),
+                  onControllerReady: (c) =>
+                      setState(() => _carouselController = c),
                   onTap: (item) {
                     DetailsRoute(
                       $extra: DetailsRouteExtra(item: item),
@@ -285,15 +381,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 child: ExploreCarousel(
                   movies: data.values.first.take(7).toList(),
                   scrollController: _scrollController,
+                  onNavigateUp: () => _firstActionFocusNode.requestFocus(),
+                  onControllerReady: (c) =>
+                      setState(() => _carouselController = c),
                   onTap: (item) {
                     DetailsRoute(
                       $extra: DetailsRouteExtra(item: item),
                     ).push<void>(context);
                   },
                 ),
+              )
+            else if (!isWidescreen)
+              // No carousel — add top padding so content below doesn't
+              // overlap with the transparent app bar (mobile only).
+              SliverPadding(
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + kToolbarHeight,
+                ),
               ),
 
-            // Continue Watching
             if (watchHistoryEnabled && history.isNotEmpty)
               SliverToBoxAdapter(
                 child: ContinueWatchingSection(
@@ -302,7 +408,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ),
               ),
 
-            // Category sections — lazily built
+            if (syncedProgressAsync.asData?.value.isNotEmpty == true)
+              SliverToBoxAdapter(
+                child: SyncedProgressSection(
+                  title: 'Synced from Trakt',
+                  items: syncedProgressAsync.asData!.value,
+                  onItemTap: (item) {
+                    // Pre-fill search query and navigate to Search tab
+                    ref.read(searchQueryProvider.notifier).set(item.title);
+                    const SearchRoute().go(context);
+                  },
+                ),
+              ),
+
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
@@ -314,8 +432,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   return MediaHorizontalList(
                     title: entry.key,
                     mediaList: entry.value,
-                    category: ViewAllCategory.trending,
-                    showViewAll: false,
+                    category: ViewAllCategory.providerContent,
+                    showViewAll: true,
                     onTap: (item) {
                       DetailsRoute(
                         $extra: DetailsRouteExtra(item: item),
@@ -330,7 +448,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
             ),
 
-            // Bottom padding for FAB
             const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
           ],
         ),
@@ -338,7 +455,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     };
   }
 
-  Widget _buildNoProviderState(BuildContext context, AppLocalizations l10n) {
+  Widget _buildNoProviderState(
+    BuildContext context,
+    AppLocalizations l10n, {
+    bool isWidescreen = false,
+  }) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -354,7 +475,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text(l10n.tapExtensionIcon),
+          if (isWidescreen) ...[
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              onPressed: () => _showProviderSelector(context, ref),
+              icon: const Icon(Icons.extension_rounded),
+              label: const Text('Select Provider'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    LayoutConstants.radiusPill,
+                  ),
+                ),
+              ),
+            ),
+          ] else
+            Text(l10n.tapExtensionIcon),
         ],
       ),
     );
@@ -460,7 +600,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               Icon(
                 Icons.extension_off_rounded,
                 size: 56,
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.6),
               ),
               const SizedBox(height: 16),
               Text(
@@ -493,6 +635,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     final scrollController = ScrollController();
     final chipsScrollController = ScrollController();
+    bool didInitialScroll = false;
 
     showDialog<void>(
       context: context,
@@ -505,7 +648,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Filter Chips
                 Consumer(
                   builder: (context, ref, _) {
                     final currentFilter = ref.watch(homeFilterProvider);
@@ -515,7 +657,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       child: SingleChildScrollView(
                         controller: chipsScrollController,
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         child: Row(
                           children: [
                             FilterChip(
@@ -559,11 +704,57 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   child: Consumer(
                     builder: (context, ref, _) {
                       final filter = ref.watch(homeFilterProvider);
+                      final extensionsState = ref.watch(
+                        extensionsControllerProvider,
+                      );
+                      final installedPlugins = extensionsState.installedPlugins;
+
                       final filteredProviders = filter == null
                           ? providers
                           : providers
                                 .where((p) => p.supportedTypes.contains(filter))
                                 .toList();
+
+                      // Auto-scroll to selected provider on initial show
+                      int targetIndex = -1;
+                      if (activeProvider == null) {
+                        if (filter == null) {
+                          targetIndex = 0;
+                        }
+                      } else {
+                        final idx = filteredProviders.indexWhere(
+                          (p) => p.packageName == activeProvider.packageName,
+                        );
+                        if (idx != -1) {
+                          targetIndex = filter == null ? idx + 1 : idx;
+                        } else {
+                          targetIndex = 0;
+                        }
+                      }
+
+                      // If still -1 (e.g. activeProvider == null and filter != null), focus first item
+                      if (targetIndex == -1) targetIndex = 0;
+
+                      if (!didInitialScroll && targetIndex != -1) {
+                        didInitialScroll = true;
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (scrollController.hasClients) {
+                            final itemTop = targetIndex * 56.0;
+                            final viewportHeight =
+                                scrollController.position.viewportDimension;
+                            const itemHeight = 56.0;
+                            final offset =
+                                itemTop -
+                                (viewportHeight / 2) +
+                                (itemHeight / 2);
+                            final maxScroll =
+                                scrollController.position.maxScrollExtent;
+                            scrollController.jumpTo(
+                              offset.clamp(0.0, maxScroll),
+                            );
+                          }
+                        });
+                      }
 
                       return RadioGroup<String?>(
                         groupValue: activeProvider?.packageName,
@@ -579,69 +770,142 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           Navigator.pop(context);
                           ref.invalidate(homeDataProvider);
                         },
-                        child: ListView.builder(
-                          controller: scrollController,
-                          shrinkWrap: true,
-                          itemCount:
-                              (filter == null ? 1 : 0) +
-                              filteredProviders.length,
-                          itemBuilder: (context, index) {
-                            if (filter == null && index == 0) {
-                              return ListTile(
-                                title: Text(l10n.none),
-                                leading: const Radio<String?>(value: null),
-                                onTap: () {
-                                  ref
-                                      .read(activeProviderProvider.notifier)
-                                      .set(null);
-                                  Navigator.pop(context);
-                                  ref.invalidate(homeDataProvider);
-                                },
-                              );
-                            }
-
-                            final p =
-                                filteredProviders[filter == null
-                                    ? index - 1
-                                    : index];
-                            final isDebug = p.isDebug;
-                            return ListTile(
-                              title: Row(
-                                children: [
-                                  Expanded(child: Text(p.name)),
-                                  if (isDebug) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        l10n.debug,
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                        child: Material(
+                          color: Colors.transparent,
+                          clipBehavior: Clip.hardEdge,
+                          child: ListView.builder(
+                            controller: scrollController,
+                            shrinkWrap: true,
+                            padding: EdgeInsets.zero,
+                            itemCount:
+                                (filter == null ? 1 : 0) +
+                                filteredProviders.length,
+                            itemBuilder: (context, index) {
+                              if (filter == null && index == 0) {
+                                return SizedBox(
+                                  height: 56.0,
+                                  child: Center(
+                                    child: ListTile(
+                                      title: Text(l10n.none),
+                                      leading: const Radio<String?>(value: null),
+                                      autofocus: index == targetIndex,
+                                      onTap: () {
+                                        ref
+                                            .read(activeProviderProvider.notifier)
+                                            .set(null);
+                                        Navigator.pop(context);
+                                        ref.invalidate(homeDataProvider);
+                                      },
                                     ),
-                                  ],
-                                ],
-                              ),
-                              leading: Radio<String?>(value: p.packageName),
-                              onTap: () {
-                                ref
-                                    .read(activeProviderProvider.notifier)
-                                    .set(p);
-                                Navigator.pop(context);
-                                ref.invalidate(homeDataProvider);
-                              },
-                            );
-                          },
+                                  ),
+                                );
+                              }
+
+                              final p =
+                                  filteredProviders[filter == null
+                                      ? index - 1
+                                      : index];
+                              final isDebug = p.isDebug;
+                              final isSubprovider = p.packageName.contains('::');
+                              String pluginTag = '';
+                              if (isSubprovider) {
+                                final parentPackageName = p.packageName.substring(
+                                  0,
+                                  p.packageName.indexOf('::'),
+                                );
+                                final plugin = installedPlugins
+                                    .cast<ExtensionPlugin?>()
+                                    .firstWhere(
+                                      (pl) =>
+                                          pl?.packageName == parentPackageName,
+                                      orElse: () => null,
+                                    );
+                                pluginTag = plugin?.name ?? parentPackageName;
+                              }
+
+                              return SizedBox(
+                                height: 56.0,
+                                child: Center(
+                                  child: ListTile(
+                                    autofocus: index == targetIndex,
+                                    title: Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            p.name,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        if (isSubprovider) ...[
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            constraints: const BoxConstraints(
+                                              maxWidth: 120,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.secondaryContainer,
+                                              borderRadius: BorderRadius.circular(
+                                                4,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              pluginTag,
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSecondaryContainer,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                        if (isDebug) ...[
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 4,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius: BorderRadius.circular(
+                                                4,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              l10n.debug,
+                                              style: const TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    leading: Radio<String?>(value: p.packageName),
+                                    onTap: () {
+                                      ref
+                                          .read(activeProviderProvider.notifier)
+                                          .set(p);
+                                      Navigator.pop(context);
+                                      ref.invalidate(homeDataProvider);
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       );
                     },
@@ -651,7 +915,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
           actions: [
-            TextButton(
+            CustomButton(
               onPressed: () => Navigator.pop(context),
               child: Text(l10n.close),
             ),
@@ -676,5 +940,98 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       case ProviderType.other:
         return l10n.unknown;
     }
+  }
+
+  Widget _buildCarouselShimmer(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final heroHeight = size.height * 0.60;
+    final isDesktop =
+        size.width > LayoutConstants.exploreCarouselDesktopBreakpoint;
+
+    if (isDesktop) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: LayoutConstants.dashboardContentPadding,
+          vertical: LayoutConstants.spacingSm,
+        ),
+        child: SizedBox(
+          height: heroHeight,
+          width: double.infinity,
+          child: ShimmerPlaceholder(borderRadius: 18),
+        ),
+      );
+    } else {
+      return SizedBox(
+        height: heroHeight,
+        width: double.infinity,
+        child: ShimmerPlaceholder.rectangular(
+          width: double.infinity,
+          height: heroHeight,
+          borderRadius: 0,
+        ),
+      );
+    }
+  }
+
+  Widget _buildListShimmer(BuildContext context) {
+    final isDesktop = context.isDesktop;
+    final cardWidth = isDesktop ? 200.0 : 130.0;
+    final imageHeight = cardWidth / (2 / 3);
+    final listHeight = imageHeight + 40.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title Placeholder
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            isDesktop
+                ? LayoutConstants.dashboardContentPadding
+                : LayoutConstants.spacingMd,
+            LayoutConstants.spacingLg,
+            isDesktop
+                ? LayoutConstants.dashboardContentPadding
+                : LayoutConstants.spacingMd,
+            LayoutConstants.spacingSm,
+          ),
+          child: ShimmerPlaceholder.rectangular(
+            width: 150,
+            height: 24,
+            borderRadius: 4,
+          ),
+        ),
+        const SizedBox(height: LayoutConstants.spacingMd),
+        // List Placeholder
+        SizedBox(
+          height: listHeight,
+          child: ListView.separated(
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktop
+                  ? LayoutConstants.dashboardContentPadding
+                  : LayoutConstants.spacingMd,
+            ),
+            scrollDirection: Axis.horizontal,
+            itemCount: 10,
+            separatorBuilder: (_, _) => SizedBox(
+              width: isDesktop
+                  ? LayoutConstants.spacingLg
+                  : LayoutConstants.spacingSm,
+            ),
+            itemBuilder: (context, index) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ShimmerPlaceholder.rectangular(
+                    width: cardWidth,
+                    height: imageHeight,
+                    borderRadius: 12,
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 }

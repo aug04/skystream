@@ -96,6 +96,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get dohProvider => 'Fornecedor DoH';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'Gerir Extensões';
 
   @override
@@ -604,7 +611,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get noReposFound => 'Nenhum repositório ou plugin encontrado';
 
   @override
-  String get downloadAllProviders => 'Transferir todos os fornecedores';
+  String get downloadAllProviders => 'Transferir tudo';
 
   @override
   String get removeRepository => 'Remover Repositório';
@@ -1076,6 +1083,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get skip => 'Saltar';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'Em Direto';
 
   @override
@@ -1124,6 +1140,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'Contas de legendas';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'Não logado';
@@ -1818,7 +1837,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get noReposFound => 'Nenhum repositório ou plugin encontrado';
 
   @override
-  String get downloadAllProviders => 'Baixar todos os provedores';
+  String get downloadAllProviders => 'Baixar todos';
 
   @override
   String get removeRepository => 'Remover Repositório';

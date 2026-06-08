@@ -41,13 +41,15 @@ class SettingsGroup extends StatelessWidget {
   }
 }
 
-class SettingsTile extends StatelessWidget {
+class SettingsTile extends StatefulWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
   final Widget? trailing;
   final VoidCallback? onTap;
   final bool isLast;
+  final bool isBeta;
+  final FocusNode? focusNode;
 
   const SettingsTile({
     super.key,
@@ -57,50 +59,127 @@ class SettingsTile extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.isLast = false,
+    this.isBeta = false,
+    this.focusNode,
   });
 
   @override
+  State<SettingsTile> createState() => _SettingsTileState();
+}
+
+class _SettingsTileState extends State<SettingsTile> {
+  bool _isFocused = false;
+
+  @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Column(
       children: [
-        ListTile(
-          focusColor: Theme.of(
-            context,
-          ).colorScheme.primary.withValues(alpha: 0.15),
-          leading: Container(
-            padding: const EdgeInsets.all(LayoutConstants.spacingXs),
+        Focus(
+          // Passive observer — we want the inner ListTile's InkWell to remain
+          // the actual focus target (it's what handles onTap when OK is
+          // pressed). hasFocus on this node reflects "any descendant focused"
+          // so onFocusChange still fires when the tile is reached.
+          focusNode: widget.focusNode,
+          canRequestFocus: false,
+          skipTraversal: true,
+          onFocusChange: (f) {
+            setState(() => _isFocused = f);
+            if (f) {
+              // Center the focused setting row in the viewport.
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                final ctx = FocusManager.instance.primaryFocus?.context;
+                final ro = ctx?.findRenderObject();
+                if (ctx != null && ctx.mounted && ro != null) {
+                  Scrollable.maybeOf(ctx)?.position.ensureVisible(
+                    ro,
+                    alignment: 0.5,
+                    duration: const Duration(milliseconds: 380),
+                    curve: Curves.fastOutSlowIn,
+                  );
+                }
+              });
+            }
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(16),
+              color: _isFocused
+                  ? primary.withValues(alpha: 0.22)
+                  : Colors.transparent,
+              border: Border.all(
+                color: _isFocused ? primary : Colors.transparent,
+                width: 2,
+              ),
             ),
-            child: Icon(
-              icon,
-              color: Theme.of(context).colorScheme.primary,
-              size: 20,
-            ),
-          ),
-          title: Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-          subtitle: subtitle != null
-              ? Text(
-                  subtitle!,
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodySmall?.color,
+            child: Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                focusColor: Colors.transparent,
+                hoverColor: primary.withValues(alpha: 0.10),
+                leading: Container(
+                  padding: const EdgeInsets.all(LayoutConstants.spacingXs),
+                  decoration: BoxDecoration(
+                    color: primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                )
-              : null,
-          trailing:
-              trailing ?? const Icon(Icons.chevron_right_rounded, size: 20),
-          onTap: onTap,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+                  child: Icon(widget.icon, color: primary, size: 20),
+                ),
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        widget.title,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    if (widget.isBeta) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withValues(
+                            alpha: 0.2,
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          "BETA",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                subtitle: widget.subtitle != null
+                    ? Text(
+                        widget.subtitle!,
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
+                      )
+                    : null,
+                trailing:
+                    widget.trailing ??
+                    const Icon(Icons.chevron_right_rounded, size: 20),
+                onTap: widget.onTap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
           ),
         ),
-        if (!isLast)
+        if (!widget.isLast && !_isFocused)
           Divider(
             height: 1,
             indent: 56,

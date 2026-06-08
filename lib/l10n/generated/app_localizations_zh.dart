@@ -96,6 +96,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dohProvider => 'DoH 供应商';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => '管理扩展';
 
   @override
@@ -589,7 +596,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noReposFound => '未找到存储库或插件';
 
   @override
-  String get downloadAllProviders => '下载所有可用供应商';
+  String get downloadAllProviders => '下载全部';
 
   @override
   String get removeRepository => '移除存储库';
@@ -1050,6 +1057,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get skip => '跳过';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => '进入直播';
 
   @override
@@ -1098,6 +1114,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get subtitleAccounts => '字幕账户';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => '未登录';
@@ -1771,7 +1790,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get noReposFound => '找不到存儲庫或外掛程式';
 
   @override
-  String get downloadAllProviders => '下載所有可用供應商';
+  String get downloadAllProviders => '下載全部';
 
   @override
   String get removeRepository => '移除存儲庫';

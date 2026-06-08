@@ -96,6 +96,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get dohProvider => 'ספק DoH';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'ניהול הרחבות';
 
   @override
@@ -595,7 +602,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get noReposFound => 'לא נמצאו מאגרים או פלאגינים';
 
   @override
-  String get downloadAllProviders => 'הורד את כל הספקים הזמינים';
+  String get downloadAllProviders => 'הורד הכל';
 
   @override
   String get removeRepository => 'הסר מאגר';
@@ -1064,6 +1071,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get skip => 'דלג';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'לשידור חי';
 
   @override
@@ -1112,6 +1128,9 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'חשבונות כתוביות';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'Not logged in';

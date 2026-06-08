@@ -90,7 +90,9 @@ void showDefaultHomeScreenDialog(
                 title: Text(opt['label']!),
                 leading: Radio<String>(value: opt['route']!),
                 onTap: () {
-                  ref.read(generalSettingsProvider.notifier).setDefaultHomeScreen(opt['route']!);
+                  ref
+                      .read(generalSettingsProvider.notifier)
+                      .setDefaultHomeScreen(opt['route']!);
                   Navigator.pop<void>(context);
                 },
               );
@@ -193,7 +195,9 @@ void showGestureDialog(
                   if (isLeft) {
                     ref.read(playerSettingsProvider.notifier).setLeftGesture(g);
                   } else {
-                    ref.read(playerSettingsProvider.notifier).setRightGesture(g);
+                    ref
+                        .read(playerSettingsProvider.notifier)
+                        .setRightGesture(g);
                   }
                   Navigator.pop<void>(context);
                 },
@@ -231,7 +235,9 @@ void showDurationDialog(BuildContext context, WidgetRef ref, int current) {
                 title: Text(formatSeekDuration(sec, l10n)),
                 leading: Radio<int>(value: sec),
                 onTap: () {
-                  ref.read(playerSettingsProvider.notifier).setSeekDuration(sec);
+                  ref
+                      .read(playerSettingsProvider.notifier)
+                      .setSeekDuration(sec);
                   Navigator.pop<void>(context);
                 },
               );
@@ -271,7 +277,9 @@ void showResizeDialog(BuildContext context, WidgetRef ref, String current) {
                 title: Text(e['label']!),
                 leading: Radio<String>(value: e['value']!),
                 onTap: () {
-                  ref.read(playerSettingsProvider.notifier).setDefaultResizeMode(e['value']!);
+                  ref
+                      .read(playerSettingsProvider.notifier)
+                      .setDefaultResizeMode(e['value']!);
                   Navigator.pop<void>(ctx);
                 },
               );
@@ -309,7 +317,9 @@ void showReadaheadDialog(BuildContext context, WidgetRef ref, int current) {
                 title: Text(formatReadahead(sec, l10n)),
                 leading: Radio<int>(value: sec),
                 onTap: () {
-                  ref.read(playerSettingsProvider.notifier).setReadaheadSeconds(sec);
+                  ref
+                      .read(playerSettingsProvider.notifier)
+                      .setReadaheadSeconds(sec);
                   Navigator.pop<void>(context);
                 },
               );
@@ -416,10 +426,12 @@ void showDefaultPlayerDialog(
               ListTile(
                 title: Text(l10n.internalPlayer),
                 subtitle: Text(l10n.builtInPlayer),
-                leading: Radio<String?>(value: null),
+                leading: const Radio<String?>(value: null),
                 trailing: const Icon(Icons.play_circle_filled_rounded),
                 onTap: () {
-                  ref.read(playerSettingsProvider.notifier).setPreferredPlayer(null);
+                  ref
+                      .read(playerSettingsProvider.notifier)
+                      .setPreferredPlayer(null);
                   Navigator.pop<void>(context);
                 },
               ),
@@ -430,7 +442,9 @@ void showDefaultPlayerDialog(
                   leading: Radio<String?>(value: player.id),
                   trailing: Icon(player.icon),
                   onTap: () {
-                    ref.read(playerSettingsProvider.notifier).setPreferredPlayer(player.id);
+                    ref
+                        .read(playerSettingsProvider.notifier)
+                        .setPreferredPlayer(player.id);
                     Navigator.pop<void>(context);
                   },
                 );
@@ -497,50 +511,67 @@ void showDohProviderDialog(BuildContext context, WidgetRef ref) {
                     ListTile(
                       title: Text(l10n.cloudflare),
                       subtitle: const Text('1.1.1.1'),
-                      leading: Radio<DohProvider>(value: DohProvider.cloudflare),
+                      leading: const Radio<DohProvider>(
+                        value: DohProvider.cloudflare,
+                      ),
                       onTap: () => saveAndClose(DohProvider.cloudflare),
                     ),
                     ListTile(
                       title: Text(l10n.google),
                       subtitle: const Text('8.8.8.8'),
-                      leading: Radio<DohProvider>(value: DohProvider.google),
+                      leading: const Radio<DohProvider>(
+                        value: DohProvider.google,
+                      ),
                       onTap: () => saveAndClose(DohProvider.google),
                     ),
                     ListTile(
                       title: Text(l10n.adguard),
                       subtitle: const Text('dns.adguard.com'),
-                      leading: Radio<DohProvider>(value: DohProvider.adguard),
+                      leading: const Radio<DohProvider>(
+                        value: DohProvider.adguard,
+                      ),
                       onTap: () => saveAndClose(DohProvider.adguard),
                     ),
                     ListTile(
                       title: Text(l10n.dnsWatch),
                       subtitle: const Text('resolver2.dns.watch'),
-                      leading: Radio<DohProvider>(value: DohProvider.dnsWatch),
+                      leading: const Radio<DohProvider>(
+                        value: DohProvider.dnsWatch,
+                      ),
                       onTap: () => saveAndClose(DohProvider.dnsWatch),
                     ),
                     ListTile(
                       title: Text(l10n.quad9),
                       subtitle: const Text('9.9.9.9'),
-                      leading: Radio<DohProvider>(value: DohProvider.quad9),
+                      leading: const Radio<DohProvider>(
+                        value: DohProvider.quad9,
+                      ),
                       onTap: () => saveAndClose(DohProvider.quad9),
                     ),
                     ListTile(
                       title: Text(l10n.dnsSb),
                       subtitle: const Text('doh.dns.sb'),
-                      leading: Radio<DohProvider>(value: DohProvider.dnsSb),
+                      leading: const Radio<DohProvider>(
+                        value: DohProvider.dnsSb,
+                      ),
                       onTap: () => saveAndClose(DohProvider.dnsSb),
                     ),
                     ListTile(
                       title: Text(l10n.canadianShield),
                       subtitle: const Text('private.canadianshield.cira.ca'),
-                      leading: Radio<DohProvider>(value: DohProvider.canadianShield),
+                      leading: const Radio<DohProvider>(
+                        value: DohProvider.canadianShield,
+                      ),
                       onTap: () => saveAndClose(DohProvider.canadianShield),
                     ),
                     ListTile(
                       title: Text(l10n.custom),
                       subtitle: Text(l10n.enterCustomDohUrl),
-                      leading: Radio<DohProvider>(value: DohProvider.custom),
-                      onTap: () => setState(() => currentProvider = DohProvider.custom),
+                      leading: const Radio<DohProvider>(
+                        value: DohProvider.custom,
+                      ),
+                      onTap: () =>
+                          setState(() => currentProvider = DohProvider.custom),
                     ),
                     if (currentProvider == DohProvider.custom)
                       Padding(
@@ -554,7 +585,10 @@ void showDohProviderDialog(BuildContext context, WidgetRef ref) {
                           decoration: InputDecoration(
                             labelText: l10n.customDohUrlLabel,
                             hintText: 'https://...',
-                            prefixIcon: const Icon(Icons.link_rounded, size: 20),
+                            prefixIcon: const Icon(
+                              Icons.link_rounded,
+                              size: 20,
+                            ),
                           ),
                           keyboardType: TextInputType.url,
                         ),
@@ -616,15 +650,21 @@ void showThemeDialog(
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildThemeOption(l10n.system, ThemeMode.system, () {
-                ref.read(appThemeModeProvider.notifier).setThemeMode(ThemeMode.system);
+                ref
+                    .read(appThemeModeProvider.notifier)
+                    .setThemeMode(ThemeMode.system);
                 Navigator.pop<void>(context);
               }),
               _buildThemeOption(l10n.dark, ThemeMode.dark, () {
-                ref.read(appThemeModeProvider.notifier).setThemeMode(ThemeMode.dark);
+                ref
+                    .read(appThemeModeProvider.notifier)
+                    .setThemeMode(ThemeMode.dark);
                 Navigator.pop<void>(context);
               }),
               _buildThemeOption(l10n.light, ThemeMode.light, () {
-                ref.read(appThemeModeProvider.notifier).setThemeMode(ThemeMode.light);
+                ref
+                    .read(appThemeModeProvider.notifier)
+                    .setThemeMode(ThemeMode.light);
                 Navigator.pop<void>(context);
               }),
             ],
@@ -1043,173 +1083,179 @@ void showOpenSubtitlesAuthDialog(
       var isObscure = true;
 
       return StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          surfaceTintColor: Colors.transparent,
-          title: Row(
-            children: [
-              const Icon(Icons.subtitles_rounded, color: Colors.blue),
-              const SizedBox(width: 12),
-              Text(l10n.openSubtitles),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+        builder: (context, setState) => FocusTraversalGroup(
+          policy: WidgetOrderTraversalPolicy(),
+          child: AlertDialog(
+            surfaceTintColor: Colors.transparent,
+            title: Row(
               children: [
-                Text(
-                  l10n.openSubtitlesAuthSubtitle,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                CustomTextField(
-                  controller: userController,
-                  autofocus: true,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: l10n.username,
-                    prefixIcon: const Icon(Icons.person_outline, size: 20),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                CustomTextField(
-                  controller: passController,
-                  obscureText: isObscure,
-                  decoration: InputDecoration(
-                    labelText: l10n.password,
-                    prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                    suffixIcon: ExcludeFocus(
-                      child: IconButton(
-                        icon: Icon(
-                          isObscure ? Icons.visibility_off : Icons.visibility,
-                          size: 20,
-                        ),
-                        onPressed: () => setState(() => isObscure = !isObscure),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: () => launchUrl(
-                    Uri.parse('https://www.opensubtitles.com/en/users/sign_up'),
-                    mode: LaunchMode.externalApplication,
-                  ),
-                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                  label: Text(l10n.noAccountRegister),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    textStyle: const TextStyle(fontSize: 12),
-                  ),
-                ),
-                if (verifyResult != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        verifyResult!
-                            ? Icons.check_circle_outline_rounded
-                            : Icons.error_outline_rounded,
-                        color: verifyResult! ? Colors.green : Colors.red,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        verifyResult!
-                            ? l10n.connectedSuccessfully
-                            : l10n.connectionFailed,
-                        style: TextStyle(
-                          color: verifyResult! ? Colors.green : Colors.red,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: isVerifying
-                        ? null
-                        : () async {
-                            setState(() {
-                              isVerifying = true;
-                              verifyResult = null;
-                            });
-                            final ok = await ref
-                                .read(playerSettingsProvider.notifier)
-                                .verifyOpenSubtitles(
-                                  userController.text.trim(),
-                                  passController.text.trim(),
-                                );
-                            if (ctx.mounted) {
-                              setState(() {
-                                isVerifying = false;
-                                verifyResult = ok;
-                              });
-                            }
-                          },
-                    icon: isVerifying
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(
-                            Icons.check_circle_outline_rounded,
-                            size: 18,
-                          ),
-                    label: Text(l10n.testConnection),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
+                const Icon(Icons.subtitles_rounded, color: Colors.blue),
+                const SizedBox(width: 12),
+                Text(l10n.openSubtitles),
               ],
             ),
-          ),
-          actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: isVerifying
-                      ? null
-                      : () => Navigator.pop<void>(ctx),
-                  child: Text(
-                    l10n.cancel,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.openSubtitlesAuthSubtitle,
                     style: TextStyle(
+                      fontSize: 13,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                CustomButton(
-                  isPrimary: true,
-                  onPressed: isVerifying
-                      ? null
-                      : () {
-                          ref
-                              .read(playerSettingsProvider.notifier)
-                              .setOpenSubtitlesCredentials(
-                                userController.text.trim(),
-                                passController.text.trim(),
-                              );
-                          Navigator.pop<void>(ctx);
-                        },
-                  child: Text(l10n.save),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    controller: userController,
+                    autofocus: true,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: l10n.username,
+                      prefixIcon: const Icon(Icons.person_outline, size: 20),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  CustomTextField(
+                    controller: passController,
+                    obscureText: isObscure,
+                    decoration: InputDecoration(
+                      labelText: l10n.password,
+                      prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                      suffixIcon: ExcludeFocus(
+                        child: IconButton(
+                          icon: Icon(
+                            isObscure ? Icons.visibility_off : Icons.visibility,
+                            size: 20,
+                          ),
+                          onPressed: () =>
+                              setState(() => isObscure = !isObscure),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () => launchUrl(
+                      Uri.parse(
+                        'https://www.opensubtitles.com/en/users/sign_up',
+                      ),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    label: Text(l10n.noAccountRegister),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      textStyle: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  if (verifyResult != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          verifyResult!
+                              ? Icons.check_circle_outline_rounded
+                              : Icons.error_outline_rounded,
+                          color: verifyResult! ? Colors.green : Colors.red,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          verifyResult!
+                              ? l10n.connectedSuccessfully
+                              : l10n.connectionFailed,
+                          style: TextStyle(
+                            color: verifyResult! ? Colors.green : Colors.red,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: isVerifying
+                          ? null
+                          : () async {
+                              setState(() {
+                                isVerifying = true;
+                                verifyResult = null;
+                              });
+                              final ok = await ref
+                                  .read(playerSettingsProvider.notifier)
+                                  .verifyOpenSubtitles(
+                                    userController.text.trim(),
+                                    passController.text.trim(),
+                                  );
+                              if (ctx.mounted) {
+                                setState(() {
+                                  isVerifying = false;
+                                  verifyResult = ok;
+                                });
+                              }
+                            },
+                      icon: isVerifying
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(
+                              Icons.check_circle_outline_rounded,
+                              size: 18,
+                            ),
+                      label: Text(l10n.testConnection),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: isVerifying
+                        ? null
+                        : () => Navigator.pop<void>(ctx),
+                    child: Text(
+                      l10n.cancel,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  CustomButton(
+                    isPrimary: true,
+                    onPressed: isVerifying
+                        ? null
+                        : () {
+                            ref
+                                .read(playerSettingsProvider.notifier)
+                                .setOpenSubtitlesCredentials(
+                                  userController.text.trim(),
+                                  passController.text.trim(),
+                                );
+                            Navigator.pop<void>(ctx);
+                          },
+                    child: Text(l10n.save),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       );
     },
@@ -1238,260 +1284,265 @@ void showSubDlAuthDialog(
       bool? verifyKeyResult;
 
       return StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          surfaceTintColor: Colors.transparent,
-          title: const Row(
-            children: [
-              Icon(Icons.vpn_key_rounded, color: Colors.orange),
-              SizedBox(width: 12),
-              Text('SubDL API Key'),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+        builder: (context, setState) => FocusTraversalGroup(
+          policy: WidgetOrderTraversalPolicy(),
+          child: AlertDialog(
+            surfaceTintColor: Colors.transparent,
+            title: const Row(
               children: [
-                Text(
-                  l10n.subDlAuthSubtitle,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                CustomTextField(
-                  controller: apiKeyController,
-                  autofocus: true,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: l10n.apiKey,
-                    prefixIcon: const Icon(Icons.key_rounded, size: 20),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    const Expanded(child: Divider()),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        'OR FETCH VIA ACCOUNT',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ),
-                    Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                CustomTextField(
-                  controller: emailController,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: l10n.email,
-                    prefixIcon: const Icon(Icons.email_outlined, size: 20),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                CustomTextField(
-                  controller: passController,
-                  obscureText: isObscure,
-                  decoration: InputDecoration(
-                    labelText: l10n.password,
-                    prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                    suffixIcon: ExcludeFocus(
-                      child: IconButton(
-                        icon: Icon(
-                          isObscure ? Icons.visibility_off : Icons.visibility,
-                          size: 20,
-                        ),
-                        onPressed: () => setState(() => isObscure = !isObscure),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: (isFetching || isVerifyingKey)
-                        ? null
-                        : () async {
-                            setState(() {
-                              isFetching = true;
-                              fetchError = null;
-                              verifyKeyResult = null;
-                            });
-                            final result = await ref
-                                .read(playerSettingsProvider.notifier)
-                                .verifySubDl(
-                                  emailController.text.trim(),
-                                  passController.text.trim(),
-                                );
-                            if (ctx.mounted) {
-                              setState(() {
-                                isFetching = false;
-                                if (result.key != null) {
-                                  apiKeyController.text = result.key!;
-                                } else {
-                                  fetchError = result.error;
-                                }
-                              });
-                            }
-                          },
-                    icon: isFetching
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.download_rounded, size: 18),
-                    label: Text(l10n.fetchMyApiKey),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: theme.colorScheme.primary.withValues(
-                        alpha: 0.8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextButton.icon(
-                  onPressed: () => launchUrl(
-                    Uri.parse('https://subdl.com/panel/api'),
-                    mode: LaunchMode.externalApplication,
-                  ),
-                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                  label: Text(l10n.noAccountRegister),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    textStyle: const TextStyle(fontSize: 12),
-                  ),
-                ),
-                if (fetchError != null || verifyKeyResult != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        fetchError != null || verifyKeyResult == false
-                            ? Icons.error_outline_rounded
-                            : Icons.check_circle_outline_rounded,
-                        color: fetchError != null || verifyKeyResult == false
-                            ? Colors.red
-                            : Colors.green,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          fetchError ??
-                              (verifyKeyResult!
-                                  ? l10n.keyVerified
-                                  : l10n.invalidApiKey),
-                          style: TextStyle(
-                            color:
-                                fetchError != null || verifyKeyResult == false
-                                ? Colors.red
-                                : Colors.green,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: (isFetching || isVerifyingKey)
-                        ? null
-                        : () async {
-                            setState(() {
-                              isVerifyingKey = true;
-                              verifyKeyResult = null;
-                              fetchError = null;
-                            });
-                            final ok = await ref
-                                .read(playerSettingsProvider.notifier)
-                                .verifySubDlKey(apiKeyController.text.trim());
-                            if (ctx.mounted) {
-                              setState(() {
-                                isVerifyingKey = false;
-                                verifyKeyResult = ok;
-                              });
-                            }
-                          },
-                    icon: isVerifyingKey
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(
-                            Icons.check_circle_outline_rounded,
-                            size: 18,
-                          ),
-                    label: Text(l10n.testConnection),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
+                Icon(Icons.vpn_key_rounded, color: Colors.orange),
+                SizedBox(width: 12),
+                Text('SubDL API Key'),
               ],
             ),
-          ),
-          actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: (isFetching || isVerifyingKey)
-                      ? null
-                      : () => Navigator.pop<void>(ctx),
-                  child: Text(
-                    l10n.cancel,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.subDlAuthSubtitle,
                     style: TextStyle(
+                      fontSize: 13,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                CustomButton(
-                  isPrimary: true,
-                  onPressed: (isFetching || isVerifyingKey)
-                      ? null
-                      : () {
-                          ref
-                              .read(playerSettingsProvider.notifier)
-                              .setSubDlAuth(
-                                apiKey: apiKeyController.text.trim(),
-                                email: emailController.text.trim(),
-                                pass: passController.text.trim(),
-                              );
-                          Navigator.pop<void>(ctx);
-                        },
-                  child: Text(l10n.save),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    controller: apiKeyController,
+                    autofocus: true,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: l10n.apiKey,
+                      prefixIcon: const Icon(Icons.key_rounded, size: 20),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          'OR FETCH VIA ACCOUNT',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    controller: emailController,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: l10n.email,
+                      prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  CustomTextField(
+                    controller: passController,
+                    obscureText: isObscure,
+                    decoration: InputDecoration(
+                      labelText: l10n.password,
+                      prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                      suffixIcon: ExcludeFocus(
+                        child: IconButton(
+                          icon: Icon(
+                            isObscure ? Icons.visibility_off : Icons.visibility,
+                            size: 20,
+                          ),
+                          onPressed: () =>
+                              setState(() => isObscure = !isObscure),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: (isFetching || isVerifyingKey)
+                          ? null
+                          : () async {
+                              setState(() {
+                                isFetching = true;
+                                fetchError = null;
+                                verifyKeyResult = null;
+                              });
+                              final result = await ref
+                                  .read(playerSettingsProvider.notifier)
+                                  .verifySubDl(
+                                    emailController.text.trim(),
+                                    passController.text.trim(),
+                                  );
+                              if (ctx.mounted) {
+                                setState(() {
+                                  isFetching = false;
+                                  if (result.key != null) {
+                                    apiKeyController.text = result.key!;
+                                  } else {
+                                    fetchError = result.error;
+                                  }
+                                });
+                              }
+                            },
+                      icon: isFetching
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.download_rounded, size: 18),
+                      label: Text(l10n.fetchMyApiKey),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: theme.colorScheme.primary.withValues(
+                          alpha: 0.8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: () => launchUrl(
+                      Uri.parse('https://subdl.com/panel/api'),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    label: Text(l10n.noAccountRegister),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      textStyle: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  if (fetchError != null || verifyKeyResult != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          fetchError != null || verifyKeyResult == false
+                              ? Icons.error_outline_rounded
+                              : Icons.check_circle_outline_rounded,
+                          color: fetchError != null || verifyKeyResult == false
+                              ? Colors.red
+                              : Colors.green,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            fetchError ??
+                                (verifyKeyResult!
+                                    ? l10n.keyVerified
+                                    : l10n.invalidApiKey),
+                            style: TextStyle(
+                              color:
+                                  fetchError != null || verifyKeyResult == false
+                                  ? Colors.red
+                                  : Colors.green,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: (isFetching || isVerifyingKey)
+                          ? null
+                          : () async {
+                              setState(() {
+                                isVerifyingKey = true;
+                                verifyKeyResult = null;
+                                fetchError = null;
+                              });
+                              final ok = await ref
+                                  .read(playerSettingsProvider.notifier)
+                                  .verifySubDlKey(apiKeyController.text.trim());
+                              if (ctx.mounted) {
+                                setState(() {
+                                  isVerifyingKey = false;
+                                  verifyKeyResult = ok;
+                                });
+                              }
+                            },
+                      icon: isVerifyingKey
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(
+                              Icons.check_circle_outline_rounded,
+                              size: 18,
+                            ),
+                      label: Text(l10n.testConnection),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: (isFetching || isVerifyingKey)
+                        ? null
+                        : () => Navigator.pop<void>(ctx),
+                    child: Text(
+                      l10n.cancel,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  CustomButton(
+                    isPrimary: true,
+                    onPressed: (isFetching || isVerifyingKey)
+                        ? null
+                        : () {
+                            ref
+                                .read(playerSettingsProvider.notifier)
+                                .setSubDlAuth(
+                                  apiKey: apiKeyController.text.trim(),
+                                  email: emailController.text.trim(),
+                                  pass: passController.text.trim(),
+                                );
+                            Navigator.pop<void>(ctx);
+                          },
+                    child: Text(l10n.save),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       );
     },
@@ -1514,147 +1565,150 @@ void showSubSourceAuthDialog(
       bool? verifyResult;
 
       return StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          surfaceTintColor: Colors.transparent,
-          title: const Row(
-            children: [
-              Icon(Icons.vpn_key_rounded, color: Colors.blue),
-              SizedBox(width: 12),
-              Text('SubSource API Key'),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+        builder: (context, setState) => FocusTraversalGroup(
+          policy: WidgetOrderTraversalPolicy(),
+          child: AlertDialog(
+            surfaceTintColor: Colors.transparent,
+            title: const Row(
               children: [
-                Text(
-                  l10n.subSourceAuthSubtitle,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                CustomTextField(
-                  controller: keyController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.apiKeyOptionalOverride,
-                    prefixIcon: const Icon(Icons.key_rounded, size: 20),
-                    hintText: l10n.enterKeyToOverrideDefault,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextButton.icon(
-                  onPressed: () => launchUrl(
-                    Uri.parse('https://subsource.net/dashboard/profile'),
-                    mode: LaunchMode.externalApplication,
-                  ),
-                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                  label: Text(l10n.getApiKeyFromProfile),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    textStyle: const TextStyle(fontSize: 12),
-                  ),
-                ),
-                if (verifyResult != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        verifyResult!
-                            ? Icons.check_circle_outline_rounded
-                            : Icons.error_outline_rounded,
-                        color: verifyResult! ? Colors.green : Colors.red,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        verifyResult! ? l10n.keyVerified : l10n.invalidApiKey,
-                        style: TextStyle(
-                          color: verifyResult! ? Colors.green : Colors.red,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: isVerifying
-                        ? null
-                        : () async {
-                            setState(() {
-                              isVerifying = true;
-                              verifyResult = null;
-                            });
-                            final ok = await ref
-                                .read(playerSettingsProvider.notifier)
-                                .verifySubSource(keyController.text.trim());
-                            if (ctx.mounted) {
-                              setState(() {
-                                isVerifying = false;
-                                verifyResult = ok;
-                              });
-                            }
-                          },
-                    icon: isVerifying
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(
-                            Icons.check_circle_outline_rounded,
-                            size: 18,
-                          ),
-                    label: Text(l10n.testConnection),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
+                Icon(Icons.vpn_key_rounded, color: Colors.blue),
+                SizedBox(width: 12),
+                Text('SubSource API Key'),
               ],
             ),
-          ),
-          actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: isVerifying
-                      ? null
-                      : () => Navigator.pop<void>(ctx),
-                  child: Text(
-                    l10n.cancel,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.subSourceAuthSubtitle,
                     style: TextStyle(
+                      fontSize: 13,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                CustomButton(
-                  isPrimary: true,
-                  onPressed: isVerifying
-                      ? null
-                      : () {
-                          ref
-                              .read(playerSettingsProvider.notifier)
-                              .setSubSourceApiKey(keyController.text.trim());
-                          Navigator.pop<void>(ctx);
-                        },
-                  child: Text(l10n.save),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    controller: keyController,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      labelText: l10n.apiKeyOptionalOverride,
+                      prefixIcon: const Icon(Icons.key_rounded, size: 20),
+                      hintText: l10n.enterKeyToOverrideDefault,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: () => launchUrl(
+                      Uri.parse('https://subsource.net/dashboard/profile'),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    label: Text(l10n.getApiKeyFromProfile),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      textStyle: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  if (verifyResult != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          verifyResult!
+                              ? Icons.check_circle_outline_rounded
+                              : Icons.error_outline_rounded,
+                          color: verifyResult! ? Colors.green : Colors.red,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          verifyResult! ? l10n.keyVerified : l10n.invalidApiKey,
+                          style: TextStyle(
+                            color: verifyResult! ? Colors.green : Colors.red,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: isVerifying
+                          ? null
+                          : () async {
+                              setState(() {
+                                isVerifying = true;
+                                verifyResult = null;
+                              });
+                              final ok = await ref
+                                  .read(playerSettingsProvider.notifier)
+                                  .verifySubSource(keyController.text.trim());
+                              if (ctx.mounted) {
+                                setState(() {
+                                  isVerifying = false;
+                                  verifyResult = ok;
+                                });
+                              }
+                            },
+                      icon: isVerifying
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(
+                              Icons.check_circle_outline_rounded,
+                              size: 18,
+                            ),
+                      label: Text(l10n.testConnection),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: isVerifying
+                        ? null
+                        : () => Navigator.pop<void>(ctx),
+                    child: Text(
+                      l10n.cancel,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  CustomButton(
+                    isPrimary: true,
+                    onPressed: isVerifying
+                        ? null
+                        : () {
+                            ref
+                                .read(playerSettingsProvider.notifier)
+                                .setSubSourceApiKey(keyController.text.trim());
+                            Navigator.pop<void>(ctx);
+                          },
+                    child: Text(l10n.save),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       );
     },

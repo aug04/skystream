@@ -17,8 +17,16 @@ class SettingsRepository {
     await _storageService.saveThemeMode(mode);
   }
 
-  String getThemeMode() {
+  String? getThemeMode() {
     return _storageService.getThemeMode();
+  }
+
+  Future<void> setSidebarExpanded(bool expanded) async {
+    await _storageService.setSidebarExpanded(expanded);
+  }
+
+  bool? getSidebarExpanded() {
+    return _storageService.getSidebarExpanded();
   }
 
   Future<void> setDefaultHomeScreen(String path) async {
@@ -72,6 +80,30 @@ class SettingsRepository {
 
   bool isWatchHistoryEnabled() {
     return _storageService.isWatchHistoryEnabled();
+  }
+
+  Future<void> setGithubProxyEnabled(bool enabled) async {
+    await _storageService.setGithubProxyEnabled(enabled);
+  }
+
+  bool isGithubProxyEnabled() {
+    return _storageService.isGithubProxyEnabled();
+  }
+
+  Future<void> setIntroDbIntegrationEnabled(bool enabled) async {
+    await _storageService.setIntroDbIntegrationEnabled(enabled);
+  }
+
+  bool isIntroDbIntegrationEnabled() {
+    return _storageService.isIntroDbIntegrationEnabled();
+  }
+
+  Future<void> setAnimeSkipIntegrationEnabled(bool enabled) async {
+    await _storageService.setAnimeSkipIntegrationEnabled(enabled);
+  }
+
+  bool isAnimeSkipIntegrationEnabled() {
+    return _storageService.isAnimeSkipIntegrationEnabled();
   }
 
   Future<void> setPlayerSetting(String key, dynamic value) async {

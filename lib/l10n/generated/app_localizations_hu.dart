@@ -96,6 +96,13 @@ class AppLocalizationsHu extends AppLocalizations {
   String get dohProvider => 'DoH szolgáltató';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'Bővítmények kezelése';
 
   @override
@@ -607,7 +614,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get noReposFound => 'Nem találhatók tárolók vagy bővítmények';
 
   @override
-  String get downloadAllProviders => 'Összes elérhető szolgáltató letöltése';
+  String get downloadAllProviders => 'Összes letöltése';
 
   @override
   String get removeRepository => 'Tároló eltávolítása';
@@ -1080,6 +1087,15 @@ class AppLocalizationsHu extends AppLocalizations {
   String get skip => 'Kihagyás';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'Élő adás';
 
   @override
@@ -1128,6 +1144,9 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'Felirat fiókok';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'Not logged in';

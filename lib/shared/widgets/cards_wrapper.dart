@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CardsWrapper extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final double scaleFactor;
   final bool autoFocus;
   final BorderRadius? borderRadius;
@@ -12,7 +14,8 @@ class CardsWrapper extends StatefulWidget {
     super.key,
     required this.child,
     required this.onTap,
-    this.scaleFactor = 1.05,
+    this.onLongPress,
+    this.scaleFactor = 1.03,
     this.autoFocus = false,
     this.borderRadius,
     this.focusNode,
@@ -24,23 +27,25 @@ class CardsWrapper extends StatefulWidget {
 
 class _CardsWrapperState extends State<CardsWrapper>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+  // Lazily-built. Hundreds of cards live offscreen in long rails and never
+  // get focused or hovered — creating an AnimationController for each one
+  // up front wastes vsync registrations and Tween allocations.
+  AnimationController? _controller;
+  Animation<double>? _scaleAnimation;
   bool _isFocused = false;
+  bool _isHovered = false;
   late FocusNode _node;
+
+  /// Whether the select/enter key is currently held down.
+  bool _selectKeyDown = false;
+
+  /// Set to true once the first KeyRepeatEvent fires (OS-level long press).
+  bool _longPressTriggered = false;
 
   @override
   void initState() {
     super.initState();
     _node = widget.focusNode ?? FocusNode();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: widget.scaleFactor,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     if (widget.autoFocus) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -50,27 +55,99 @@ class _CardsWrapperState extends State<CardsWrapper>
   }
 
   @override
+  void didUpdateWidget(covariant CardsWrapper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.focusNode != oldWidget.focusNode) {
+      if (oldWidget.focusNode == null) _node.dispose();
+      _node = widget.focusNode ?? FocusNode();
+    }
+  }
+
+  @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     if (widget.focusNode == null) _node.dispose();
     super.dispose();
   }
 
-  bool _isHovered = false;
+  void _ensureController() {
+    if (_controller != null) return;
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: widget.scaleFactor,
+    ).animate(CurvedAnimation(parent: _controller!, curve: Curves.easeInOut));
+  }
 
   void _updateAnimation() {
-    if (_isFocused || _isHovered) {
-      _controller.forward();
+    // In D-pad/keyboard mode the border+glow is the focus indicator; skip scale
+    // to prevent edge items from overflowing the viewport.
+    final isDpad =
+        FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
+    final shouldScale = _isHovered || (_isFocused && !isDpad);
+    if (shouldScale) {
+      _ensureController();
+      _controller!.forward();
     } else {
-      _controller.reverse();
+      _controller?.reverse();
     }
   }
 
   void _onFocusChange(bool hasFocus) {
+    if (!hasFocus) {
+      _selectKeyDown = false;
+      _longPressTriggered = false;
+    }
     setState(() {
       _isFocused = hasFocus;
     });
     _updateAnimation();
+    if (hasFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final ro = context.findRenderObject();
+        if (ro is! RenderBox || !ro.hasSize) return;
+        const duration = Duration(milliseconds: 380);
+        const curve = Curves.fastOutSlowIn;
+
+        // Horizontal: always center the focused card inside its row so the
+        // active card stays in the middle of the screen as the user walks
+        // along the row.
+        Scrollable.maybeOf(
+          context,
+          axis: Axis.horizontal,
+        )?.position.ensureVisible(
+          ro,
+          alignment: 0.5,
+          duration: duration,
+          curve: curve,
+        );
+
+        // Vertical: only scroll if the card is actually clipped. Moving
+        // Left/Right within a row would otherwise re-center the row
+        // vertically on every keystroke and the whole screen would jump.
+        final vScroll = Scrollable.maybeOf(context, axis: Axis.vertical);
+        if (vScroll != null) {
+          final scrollBox = vScroll.context.findRenderObject();
+          if (scrollBox is RenderBox && scrollBox.hasSize) {
+            final top = ro.localToGlobal(Offset.zero, ancestor: scrollBox).dy;
+            final bottom = top + ro.size.height;
+            final viewportH = scrollBox.size.height;
+            if (top < 0 || bottom > viewportH) {
+              vScroll.position.ensureVisible(
+                ro,
+                alignment: 0.5,
+                duration: duration,
+                curve: curve,
+              );
+            }
+          }
+        }
+      });
+    }
   }
 
   void _onHover(bool isHovered) {
@@ -86,6 +163,39 @@ class _CardsWrapperState extends State<CardsWrapper>
       focusNode: _node,
       onFocusChange: _onFocusChange,
       onKeyEvent: (node, event) {
+        if (event.logicalKey == LogicalKeyboardKey.select ||
+            event.logicalKey == LogicalKeyboardKey.enter ||
+            event.logicalKey == LogicalKeyboardKey.space) {
+          if (event is KeyDownEvent) {
+            if (widget.onLongPress == null) {
+              // No long-press handler — fire tap immediately.
+              widget.onTap();
+              return KeyEventResult.handled;
+            }
+            // Start tracking the press; don't fire anything yet.
+            _selectKeyDown = true;
+            _longPressTriggered = false;
+            return KeyEventResult.handled;
+          } else if (event is KeyRepeatEvent) {
+            // The OS fires KeyRepeatEvent after the platform key-repeat
+            // delay (~500 ms). Treat the first repeat as a long press.
+            if (_selectKeyDown &&
+                !_longPressTriggered &&
+                widget.onLongPress != null) {
+              _longPressTriggered = true;
+              widget.onLongPress!();
+            }
+            return KeyEventResult.handled;
+          } else if (event is KeyUpEvent) {
+            // Short press: no repeat was received before release → tap.
+            if (_selectKeyDown && !_longPressTriggered) {
+              widget.onTap();
+            }
+            _selectKeyDown = false;
+            _longPressTriggered = false;
+            return KeyEventResult.handled;
+          }
+        }
         return KeyEventResult.ignored;
       },
       child: MouseRegion(
@@ -93,20 +203,29 @@ class _CardsWrapperState extends State<CardsWrapper>
         onExit: (_) => _onHover(false),
         child: GestureDetector(
           onTap: widget.onTap,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
-                border: _isFocused
-                    ? Border.all(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 2,
-                      )
-                    : null,
-              ),
-              child: widget.child,
-            ),
+          onLongPress: widget.onLongPress,
+          child: Builder(
+            builder: (context) {
+              final card = Container(
+                decoration: BoxDecoration(
+                  borderRadius:
+                      widget.borderRadius ?? BorderRadius.circular(12),
+                  border:
+                      (_isFocused &&
+                          FocusManager.instance.highlightMode ==
+                              FocusHighlightMode.traditional)
+                      ? Border.all(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2,
+                        )
+                      : null,
+                ),
+                child: widget.child,
+              );
+              final animation = _scaleAnimation;
+              if (animation == null) return card;
+              return ScaleTransition(scale: animation, child: card);
+            },
           ),
         ),
       ),

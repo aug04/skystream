@@ -1,55 +1,27 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:skystream/l10n/generated/app_localizations.dart';
+import 'hotstar_player_style.dart';
+import 'player_prompt_placement.dart';
 
-class ResumePromptOverlay extends StatefulWidget {
-  final int positionMs;
+class ResumePromptOverlay extends StatelessWidget {
+  final int? positionMs;
+  final double? percentage;
   final VoidCallback onResume;
   final VoidCallback onStartOver;
+  final bool isTv;
+  final FocusNode? focusNode;
 
   const ResumePromptOverlay({
     super.key,
-    required this.positionMs,
+    this.positionMs,
+    this.percentage,
     required this.onResume,
     required this.onStartOver,
+    this.isTv = false,
+    this.focusNode,
   });
-
-  @override
-  State<ResumePromptOverlay> createState() => _ResumePromptOverlayState();
-}
-
-class _ResumePromptOverlayState extends State<ResumePromptOverlay>
-    with SingleTickerProviderStateMixin {
-  static const _autoDismissSecs = 8;
-  int _secondsRemaining = _autoDismissSecs;
-  Timer? _timer;
-  late AnimationController _progressController;
-
-  @override
-  void initState() {
-    super.initState();
-    _progressController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: _autoDismissSecs),
-    )..reverse(from: 1.0);
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_secondsRemaining > 1) {
-        if (mounted) setState(() => _secondsRemaining--);
-      } else {
-        timer.cancel();
-        widget.onResume(); // auto-resume when countdown ends
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _progressController.dispose();
-    super.dispose();
-  }
 
   String _formatDuration(int ms) {
     final d = Duration(milliseconds: ms);
@@ -64,154 +36,271 @@ class _ResumePromptOverlayState extends State<ResumePromptOverlay>
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomLeft,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(
-              width: 320,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.65),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+    final l10n = AppLocalizations.of(context)!;
+    String subtitle = '';
+    if (positionMs != null && positionMs! > 0) {
+      subtitle = l10n.pausedAt(_formatDuration(positionMs!));
+    } else if (percentage != null && percentage! > 0) {
+      subtitle = 'Synced progress: ${percentage!.toStringAsFixed(0)}%';
+    }
+    return PlayerPromptPlacement(
+      isTv: isTv,
+      child: CountdownFillButton(
+        focusNode: focusNode,
+        label: l10n.resumeNow,
+        subtitle: subtitle,
+        duration: const Duration(seconds: 8),
+        onPressed: onResume,
+        onTimeout: onStartOver,
+        isTv: isTv,
+      ),
+    );
+  }
+}
+
+class CountdownFillButton extends StatefulWidget {
+  final String label;
+  final String? subtitle;
+  final Duration duration;
+  final VoidCallback onPressed;
+  final VoidCallback onTimeout;
+  final bool showDismiss;
+  final VoidCallback? onDismiss;
+  final bool isTv;
+  final FocusNode? focusNode;
+
+  const CountdownFillButton({
+    super.key,
+    required this.label,
+    this.subtitle,
+    required this.duration,
+    required this.onPressed,
+    required this.onTimeout,
+    this.showDismiss = false,
+    this.onDismiss,
+    this.isTv = false,
+    this.focusNode,
+  });
+
+  @override
+  State<CountdownFillButton> createState() => _CountdownFillButtonState();
+}
+
+class _CountdownFillButtonState extends State<CountdownFillButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final FocusNode _focusNode;
+  Timer? _timer;
+  bool _completed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = widget.focusNode ?? FocusNode();
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..forward();
+    _timer = Timer(widget.duration, _handleTimeout);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    if (widget.focusNode == null) _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handlePressed() {
+    if (_completed) return;
+    _completed = true;
+    _timer?.cancel();
+    widget.onPressed();
+  }
+
+  void _handleTimeout() {
+    if (_completed) return;
+    _completed = true;
+    widget.onTimeout();
+  }
+
+  void _handleDismiss() {
+    if (_completed) return;
+    _completed = true;
+    _timer?.cancel();
+    widget.onDismiss?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final isCompact = size.shortestSide < 600;
+    final buttonWidth = isCompact ? 190.0 : 260.0;
+    final buttonHeight = widget.subtitle == null || widget.subtitle!.isEmpty
+        ? (isCompact ? 46.0 : 52.0)
+        : (isCompact ? 58.0 : 64.0);
+    final radius = isCompact ? 8.0 : 10.0;
+    final borderRadius = BorderRadius.circular(radius);
+
+    return FocusTraversalGroup(
+      child: Focus(
+        focusNode: _focusNode,
+        autofocus: widget.isTv,
+        onKeyEvent: (node, event) {
+          if (event is! KeyDownEvent) return KeyEventResult.ignored;
+          final key = event.logicalKey;
+          if (key == LogicalKeyboardKey.select ||
+              key == LogicalKeyboardKey.enter ||
+              key == LogicalKeyboardKey.space) {
+            _handlePressed();
+            return KeyEventResult.handled;
+          }
+          if (key == LogicalKeyboardKey.escape ||
+              key == LogicalKeyboardKey.goBack) {
+            widget.onDismiss != null ? _handleDismiss() : _handleTimeout();
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+        child: Builder(
+          builder: (context) {
+            final isFocused = Focus.of(context).hasFocus;
+
+            // Layout: DecoratedBox (border + shadow) → ClipRRect → Material
+            // (ink) → Row [ icon | labels | dismiss? ]
+            //
+            // The countdown fill is painted as a custom background on the
+            // Material using AnimatedBuilder, so there is NO Stack at all —
+            // just a single layered widget tree.
+            return SizedBox(
+              width: buttonWidth,
+              height: buttonHeight,
+              child: AnimatedContainer(
+                duration: HotstarPlayerStyle.fastMotionDuration,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.52),
+                  borderRadius: borderRadius,
+                  border: Border.all(
+                    color: isFocused && widget.isTv
+                        ? HotstarPlayerStyle.accent
+                        : Colors.white.withValues(alpha: 0.22),
+                    width: isFocused && widget.isTv ? 2 : 1,
                   ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          SizedBox(
-                            width: 32,
-                            height: 32,
-                            child: AnimatedBuilder(
-                              animation: _progressController,
-                              builder: (_, _) => CircularProgressIndicator(
-                                value: _progressController.value,
-                                strokeWidth: 3,
-                                color: Theme.of(context).colorScheme.primary,
-                                backgroundColor: Colors.white12,
-                              ),
-                            ),
+                  boxShadow: isFocused && widget.isTv
+                      ? [
+                          BoxShadow(
+                            color: HotstarPlayerStyle.accent
+                                .withValues(alpha: 0.2),
+                            blurRadius: 8,
                           ),
-                          Text(
-                            '$_secondsRemaining',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          AppLocalizations.of(context)!.resumingPlayback,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            letterSpacing: 1.0,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: widget.onStartOver,
-                        visualDensity: VisualDensity.compact,
-                        icon: const Icon(
-                          Icons.close_rounded,
-                          color: Colors.white60,
-                          size: 20,
-                        ),
-                        tooltip: AppLocalizations.of(context)!.startOver,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    AppLocalizations.of(context)!
-                        .pausedAt(_formatDuration(widget.positionMs)),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    AppLocalizations.of(context)!
-                        .resumesAutomatically(_secondsRemaining),
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: widget.onStartOver,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.white70,
-                            side: const BorderSide(color: Colors.white24),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(AppLocalizations.of(context)!.startOver),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: widget.onResume,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.play_arrow_rounded, size: 20),
-                              const SizedBox(width: 4),
-                              Text(
-                                AppLocalizations.of(context)!.resumeNow,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
+                        ]
+                      : null,
+                ),
+                  child: ClipRRect(
+                    borderRadius: borderRadius,
+                    // AnimatedBuilder drives the fill width; the content Row
+                    // sits on top via foregroundDecoration on a second
+                    // DecoratedBox so there is still no Stack.
+                    child: AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, child) => DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              HotstarPlayerStyle.accent
+                                  .withValues(alpha: 0.92),
+                              HotstarPlayerStyle.accent
+                                  .withValues(alpha: 0.92),
+                              Colors.transparent,
+                              Colors.transparent,
+                            ],
+                            stops: [
+                              0,
+                              _controller.value,
+                              _controller.value,
+                              1,
                             ],
                           ),
                         ),
+                        child: child,
                       ),
-                    ],
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: borderRadius,
+                          onTap: _handlePressed,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isCompact ? 12 : 16,
+                              vertical: isCompact ? 7 : 8,
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.play_arrow_rounded,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
+                                SizedBox(width: isCompact ? 6 : 8),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.label,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: isCompact ? 13 : 15,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      if (widget.subtitle != null &&
+                                          widget.subtitle!.isNotEmpty) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          widget.subtitle!,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.78),
+                                            fontSize: isCompact ? 10 : 11,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                if (widget.showDismiss &&
+                                    widget.onDismiss != null)
+                                  IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 28,
+                                      minHeight: 28,
+                                    ),
+                                    onPressed: _handleDismiss,
+                                    icon: const Icon(
+                                      Icons.close_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ),
+                ),
+            );
+          },
         ),
       ),
     );

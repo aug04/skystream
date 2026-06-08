@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -12,11 +13,21 @@ import '../downloads_provider.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/services/notification_service.dart';
 
-class DownloadsTab extends ConsumerWidget {
+class DownloadsTab extends ConsumerStatefulWidget {
   const DownloadsTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DownloadsTab> createState() => _DownloadsTabState();
+}
+
+class _DownloadsTabState extends ConsumerState<DownloadsTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
     final downloadsAsync = ref.watch(downloadsProvider);
     final activeProgress = ref.watch(downloadProgressProvider);
     final l10n = AppLocalizations.of(context)!;
@@ -89,7 +100,8 @@ class DownloadsTab extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => Center(child: Text(l10n.errorPrefix(err.toString()))),
+      error: (err, stack) =>
+          Center(child: Text(l10n.errorPrefix(err.toString()))),
     );
   }
 }
@@ -479,7 +491,11 @@ class _DownloadItemTile extends ConsumerWidget {
     }
   }
 
-  Future<void> _playLocalFile(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
+  Future<void> _playLocalFile(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) async {
     final downloadService = ref.read(downloadServiceProvider);
     final File? file = await downloadService.getDownloadedFile(
       item.item,
@@ -488,7 +504,9 @@ class _DownloadItemTile extends ConsumerWidget {
 
     if (file == null || !await file.exists()) {
       if (context.mounted) {
-        ref.read(notificationServiceProvider).showError(l10n.fileNotFoundRemoving);
+        ref
+            .read(notificationServiceProvider)
+            .showError(l10n.fileNotFoundRemoving);
       }
       // Self-delete from DB
       await ref.read(downloadsProvider.notifier).removeDownload(item);
@@ -496,13 +514,19 @@ class _DownloadItemTile extends ConsumerWidget {
     }
 
     if (context.mounted) {
-      ref
-          .read(playbackLauncherProvider)
-          .play(context, file.path, baseItem: item.item);
+      unawaited(
+        ref
+            .read(playbackLauncherProvider)
+            .play(context, file.path, baseItem: item.item),
+      );
     }
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+  void _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(

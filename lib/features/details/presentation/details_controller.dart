@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -11,7 +13,9 @@ import '../../library/presentation/library_provider.dart';
 import '../../library/presentation/history_provider.dart';
 import 'playback_launcher.dart';
 import '../../../core/services/download_service.dart';
+import '../data/metadata_resolution_service.dart';
 import 'downloaded_file_provider.dart';
+import '../../tracking/data/simkl_service.dart';
 
 part 'details_controller.g.dart';
 
@@ -191,8 +195,11 @@ class DetailsController extends _$DetailsController {
 
         final withProvider = fetchedItem.copyWith(
           provider: provider.packageName,
+          tmdbId: fetchedItem.tmdbId ?? item.tmdbId,
+          imdbId: fetchedItem.imdbId ?? item.imdbId,
         );
 
+        // Immediately render the UI with raw provider details so it's not blocked
         final sortedEpisodes = _processEpisodes(
           withProvider.episodes,
           withProvider,
@@ -202,6 +209,9 @@ class DetailsController extends _$DetailsController {
           details: AsyncData(withProvider.copyWith(episodes: sortedEpisodes)),
           item: withProvider.copyWith(episodes: sortedEpisodes),
         );
+
+        // Run Metadata Resolution in background silently (fire-and-forget).
+        unawaited(_resolveMetadataInBackground(withProvider));
       } else {
         throw Exception("No provider selected or found for this item");
       }
@@ -209,6 +219,86 @@ class DetailsController extends _$DetailsController {
       if (ref.mounted) {
         state = state.copyWith(details: AsyncError(e, st));
       }
+    }
+  }
+
+  Future<void> _resolveMetadataInBackground(MultimediaItem withProvider) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('DetailsController: Fetching missing IDs in background for ${withProvider.title}...');
+      }
+      MultimediaItem enrichedItem = withProvider;
+
+      final hasAnyWesternId = withProvider.tmdbId != null || withProvider.imdbId != null;
+
+      try {
+        if (!hasAnyWesternId) {
+          enrichedItem = await ref
+              .read(metadataResolutionServiceProvider)
+              .enrichWithIds(withProvider);
+          if (kDebugMode) {
+            debugPrint('DetailsController: Background resolution result -> tmdbId: ${enrichedItem.tmdbId}, imdbId: ${enrichedItem.imdbId}');
+          }
+        } else {
+          if (kDebugMode) {
+            debugPrint('DetailsController: Bypassed TMDB resolution (tmdbId or imdbId already provided by scraper)');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) debugPrint('DetailsController: TMDB metadata resolution failed, but continuing: $e');
+      }
+
+      // Pre-fetch Simkl / AniList tracking IDs
+      MultimediaItem finalItem = enrichedItem;
+      try {
+        final isAnime = enrichedItem.contentType == MultimediaContentType.anime ||
+            enrichedItem.syncData?['anilistId'] != null ||
+            enrichedItem.syncData?['anilist_id'] != null ||
+            (enrichedItem.tags != null && enrichedItem.tags!.any((t) => t.toLowerCase() == 'anime' || t.toLowerCase() == 'animation'));
+
+        if (isAnime) {
+          final hasAnilistId = enrichedItem.syncData?['anilist'] != null ||
+              enrichedItem.syncData?['anilistId'] != null ||
+              enrichedItem.syncData?['anilist_id'] != null;
+
+          if (!hasAnilistId) {
+            final simkl = ref.read(simklServiceProvider);
+            final resolved = await simkl.syncIds(enrichedItem);
+            if (resolved.isNotEmpty) {
+              final newSyncData = Map<String, String>.from(enrichedItem.syncData ?? {});
+              newSyncData.addAll(resolved);
+              finalItem = enrichedItem.copyWith(syncData: newSyncData);
+              if (kDebugMode) debugPrint('DetailsController: Fetched Simkl IDs: $resolved');
+            }
+          } else {
+            if (kDebugMode) debugPrint('DetailsController: Bypassed Simkl fetch (AniList ID already provided by scraper)');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) debugPrint('DetailsController: Failed to fetch Simkl IDs in background: $e');
+      }
+
+      if (!ref.mounted) return;
+
+      if (finalItem.tmdbId != withProvider.tmdbId || 
+          finalItem.imdbId != withProvider.imdbId || 
+          finalItem.syncData != withProvider.syncData) {
+        // preserve the episodes from the current state just in case
+        final currentDetails = state.details.asData?.value;
+        if (currentDetails != null) {
+          final updatedItem = currentDetails.copyWith(
+            tmdbId: finalItem.tmdbId,
+            imdbId: finalItem.imdbId,
+            syncData: finalItem.syncData,
+          );
+          state = state.copyWith(
+            details: AsyncData(updatedItem),
+            item: updatedItem,
+          );
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('DetailsController: Background metadata resolution failed: $e');
     }
   }
 
@@ -291,7 +381,7 @@ class DetailsController extends _$DetailsController {
         );
         final progress = dur > 0 ? pos / dur : 0;
 
-        if (progress > 0.95) {
+        if (progress >= 0.85) {
           if (lastIndex + 1 < allEpisodes.length) {
             targetEpisode = allEpisodes[lastIndex + 1];
           } else {

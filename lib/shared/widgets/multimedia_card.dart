@@ -27,6 +27,12 @@ class MultimediaCard extends StatelessWidget {
     final cardWidth = isDesktop
         ? (isPortrait ? 200.0 : 300.0)
         : (isPortrait ? 130.0 : 200.0);
+    // No explicit memCacheWidth here. The TMDB source is w500 which is
+    // already close to displayed width × DPR (e.g. 200 dp × 3 DPR = 600 px,
+    // 300 dp × 3 = 900 px). Forcing a smaller memCacheWidth blurs the image
+    // on hi-DPR phones; letting CNI decode at the source size keeps it crisp
+    // without bloating the cache (the cache cap in main.dart bounds total
+    // memory regardless).
 
     return RepaintBoundary(
       child: CardsWrapper(

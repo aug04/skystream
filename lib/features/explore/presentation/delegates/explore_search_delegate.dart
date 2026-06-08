@@ -5,7 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/utils/layout_constants.dart';
 import '../../../../shared/widgets/shimmer_placeholder.dart';
-import '../../../../shared/widgets/thumbnail_error_placeholder.dart';
+import '../../../../shared/widgets/multimedia_card.dart';
 
 import '../controllers/explore_search_controller.dart';
 
@@ -151,37 +151,40 @@ class _SearchSuggestionsListState
         final year = item.releaseDate.split('-').first;
         final mediaType = item.mediaType;
 
-        return ListTile(
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: CachedNetworkImage(
-              imageUrl: item.thumbnailImageUrl,
-              width: 40,
-              height: 60,
-              fit: BoxFit.cover,
-              placeholder: (_, _) => ShimmerPlaceholder(borderRadius: 4),
+        return Material(
+          type: MaterialType.transparency,
+          child: ListTile(
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: CachedNetworkImage(
+                imageUrl: item.thumbnailImageUrl,
+                width: 40,
+                height: 60,
+                fit: BoxFit.cover,
+                placeholder: (_, _) => ShimmerPlaceholder(borderRadius: 4),
+              ),
             ),
-          ),
-          title: Text(
-            title,
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-          ),
-          subtitle: Text(
-            '$mediaType ${year.isNotEmpty ? '($year)' : ''}',
-            style: TextStyle(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.6),
-              fontSize: 12,
+            title: Text(
+              title,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
+            subtitle: Text(
+              '$mediaType ${year.isNotEmpty ? '($year)' : ''}',
+              style: TextStyle(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 12,
+              ),
+            ),
+            onTap: () {
+              TmdbDetailsRoute(
+                movieId: item.id,
+                mediaType: item.tmdbMediaType,
+                heroTag: 'search_${item.id}',
+              ).push<void>(context);
+            },
           ),
-          onTap: () {
-            TmdbDetailsRoute(
-              movieId: item.id,
-              mediaType: item.tmdbMediaType,
-              heroTag: 'search_${item.id}',
-            ).push(context);
-          },
         );
       },
     );
@@ -325,50 +328,18 @@ class _SearchResultsGridState extends ConsumerState<_SearchResultsGrid> {
         final id = item.id;
         final uniqueTag = 'search_result_${id}_$index';
 
-        return GestureDetector(
+        return MultimediaCard(
+          imageUrl: imageUrl,
+          title: title,
+          heroTag: uniqueTag,
           onTap: () {
             TmdbDetailsRoute(
               movieId: id,
               mediaType: item.tmdbMediaType,
               heroTag: uniqueTag,
               placeholderPoster: imageUrl,
-            ).push(context);
+            ).push<void>(context);
           },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Hero(
-                  tag: uniqueTag,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      placeholder: (_, _) =>
-                          ShimmerPlaceholder(borderRadius: 4),
-                      errorWidget: (_, _, _) =>
-                          const ThumbnailErrorPlaceholder(),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.9),
-                  fontWeight: FontWeight.w500,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
         );
       },
     );

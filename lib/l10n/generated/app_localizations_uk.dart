@@ -96,6 +96,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get dohProvider => 'Провайдер DoH';
 
   @override
+  String get githubProxy => 'GitHub Proxy';
+
+  @override
+  String get githubProxySubtitle =>
+      'Route extension downloads through jsDelivr to bypass ISP blocks.';
+
+  @override
   String get manageExtensions => 'Керування розширеннями';
 
   @override
@@ -605,7 +612,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get noReposFound => 'Репозиторії або плагіни не знайдено';
 
   @override
-  String get downloadAllProviders => 'Завантажити всіх доступних провайдерів';
+  String get downloadAllProviders => 'Завантажити все';
 
   @override
   String get removeRepository => 'Видалити репозиторій';
@@ -1087,6 +1094,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get skip => 'Пропустити';
 
   @override
+  String get skipIntro => 'Skip Intro';
+
+  @override
+  String get skipOutro => 'Skip Outro';
+
+  @override
+  String get skipRecap => 'Skip Recap';
+
+  @override
   String get goLive => 'В ефір';
 
   @override
@@ -1135,6 +1151,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get subtitleAccounts => 'Акаунти субтитрів';
+
+  @override
+  String get accounts => 'Accounts';
 
   @override
   String get notLoggedIn => 'Not logged in';
