@@ -682,7 +682,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                         return Positioned(
                           bottom:
                               (Platform.isWindows
-                                  ? HotstarPlayerStyle.bottomChromeHeight
+                                  ? HotstarPlayerStyle.bottomChromeHeight +
+                                      (subtitleSettings?.subElevation ?? 0.0)
                                   : (controlsVisible
                                       ? HotstarPlayerStyle.bottomChromeHeight
                                       : 20.0)) +
