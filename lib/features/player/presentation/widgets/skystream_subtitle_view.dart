@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -593,8 +594,10 @@ class _SkyStreamSubtitleViewState extends ConsumerState<SkyStreamSubtitleView> {
             top: 0.0,
             bottom: alignment.y > 0
                 ? (widget.useExoPlayer
-                      ? 20.0
-                      : (widget.controlsVisible ? 60.0 : 20.0))
+                    ? 20.0
+                    : (Platform.isWindows
+                        ? 20.0 + settings.subElevation
+                        : (widget.controlsVisible ? 60.0 : 20.0)))
                 : 0.0,
           ),
           child: Align(
