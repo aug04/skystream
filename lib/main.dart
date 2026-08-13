@@ -325,25 +325,25 @@ class _MyAppState extends ConsumerState<MyApp> with WindowListener {
     });
 
     // Reactive Listener: Keeps UpdateController alive and handles the UI side-effect
-    ref.listen<UpdateState>(updateControllerProvider, (previous, next) {
-      if (next is UpdateAvailable) {
-        final navContext = appRouter.routerDelegate.navigatorKey.currentContext;
-        if (navContext != null && navContext.mounted) {
-          if (kDebugMode) {
-            debugPrint(
-              '[Lifecycle] State update detected: UpdateAvailable. Showing dialog.',
-            );
-          }
-          UpdateDialog.show(navContext, next.release);
-        } else {
-          if (kDebugMode) {
-            debugPrint(
-              '[Lifecycle] Update available but navContext not ready/mounted.',
-            );
-          }
-        }
-      }
-    });
+    // ref.listen<UpdateState>(updateControllerProvider, (previous, next) {
+    //   if (next is UpdateAvailable) {
+    //     final navContext = appRouter.routerDelegate.navigatorKey.currentContext;
+    //     if (navContext != null && navContext.mounted) {
+    //       if (kDebugMode) {
+    //         debugPrint(
+    //           '[Lifecycle] State update detected: UpdateAvailable. Showing dialog.',
+    //         );
+    //       }
+    //       UpdateDialog.show(navContext, next.release);
+    //     } else {
+    //       if (kDebugMode) {
+    //         debugPrint(
+    //           '[Lifecycle] Update available but navContext not ready/mounted.',
+    //         );
+    //       }
+    //     }
+    //   }
+    // });
 
     return DynamicColorBuilder(
       builder: (lightDynamic, darkDynamic) {

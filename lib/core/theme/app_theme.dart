@@ -14,25 +14,11 @@ class AppTheme {
   static const Color textSecondary = Color(0xFF9CA3AF);
 
   // Light Theme Colors
-  static const Color lightBackground = Color(0xFFF5F1EC); // primary surface
-  static const Color lightSurface = Color(0xFFFAF8F5); // surfaceContainerLowest
-  static const Color lightSurfaceHighlight = Color(
-    0xFFE8E2D8,
-  ); // surfaceContainerHigh
-  static const Color lightTextPrimary = Color(0xFF2C2521); // onSurface
-  static const Color lightTextSecondary = Color(0xFF5C5C5C); // onSurfaceVariant
-  static const Color lightCoral = Color(0xFFC63523); // Coral Accent
-
-  static SnackBarThemeData snackBarThemeFor(ColorScheme colorScheme) {
-    final isDark = colorScheme.brightness == Brightness.dark;
-    return SnackBarThemeData(
-      backgroundColor: isDark ? surface : colorScheme.surfaceContainerHigh,
-      contentTextStyle: TextStyle(
-        color: isDark ? onSurface : colorScheme.onSurface,
-      ),
-      actionTextColor: colorScheme.primary,
-    );
-  }
+  static const Color lightBackground = Color(0xFFF9FAFB);
+  static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color lightSurfaceHighlight = Color(0xFFF3F4F6);
+  static const Color lightTextPrimary = Color(0xFF111827);
+  static const Color lightTextSecondary = Color(0xFF6B7280);
 
   static ThemeData createDarkTheme(ColorScheme? dynamicScheme) {
     var colorScheme =
@@ -57,7 +43,6 @@ class AppTheme {
         backgroundColor: Color(0xFF18181F),
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(
-          fontFamily: 'Outfit',
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: Color(0xFFF9FAFB),
@@ -83,51 +68,51 @@ class AppTheme {
       colorScheme: colorScheme,
 
       // Typography
-      textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme)
+      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme)
           .copyWith(
-            displayLarge: GoogleFonts.outfit(
+            displayLarge: GoogleFonts.inter(
               fontSize: 32,
               fontWeight: FontWeight.bold,
               color: const Color(0xFFF9FAFB),
             ),
-            displayMedium: GoogleFonts.outfit(
+            displayMedium: GoogleFonts.inter(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: const Color(0xFFF9FAFB),
             ),
-            displaySmall: GoogleFonts.outfit(
+            displaySmall: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: const Color(0xFFF9FAFB),
             ),
-            headlineMedium: GoogleFonts.outfit(
+            headlineMedium: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.w600,
               color: const Color(0xFFF9FAFB),
             ),
-            titleLarge: GoogleFonts.outfit(
+            titleLarge: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: const Color(0xFFF9FAFB),
             ),
-            titleMedium: GoogleFonts.outfit(
+            titleMedium: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: const Color(0xFFF9FAFB),
             ),
-            bodyLarge: GoogleFonts.outfit(
+            bodyLarge: GoogleFonts.inter(
               fontSize: 16,
               color: const Color(0xFFE5E7EB),
             ),
-            bodyMedium: GoogleFonts.outfit(
+            bodyMedium: GoogleFonts.inter(
               fontSize: 14,
               color: const Color(0xFF9CA3AF),
             ),
-            bodySmall: GoogleFonts.outfit(
+            bodySmall: GoogleFonts.inter(
               fontSize: 12,
               color: const Color(0xFF6B7280),
             ),
-            labelLarge: GoogleFonts.outfit(
+            labelLarge: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.1,
@@ -157,10 +142,6 @@ class AppTheme {
         showUnselectedLabels: false,
         landscapeLayout: BottomNavigationBarLandscapeLayout.spread,
       ),
-
-      // Keep SnackBars visually consistent with the dark application instead
-      // of Material's default inverse (light) surface.
-      snackBarTheme: snackBarThemeFor(colorScheme),
 
       // Input Decoration
       inputDecorationTheme: InputDecorationTheme(
@@ -194,32 +175,13 @@ class AppTheme {
   }
 
   static ThemeData createLightTheme(ColorScheme? dynamicScheme) {
-    const colorScheme = ColorScheme.light(
-      primary: lightCoral,
-      onPrimary: Colors.white,
-      primaryContainer: Color(0xFFFFDAD4),
-      onPrimaryContainer: Color(0xFF410001),
-      secondary: Color(0xFF775651),
-      onSecondary: Colors.white,
-      secondaryContainer: lightSurfaceHighlight,
-      onSecondaryContainer: Color(0xFF2C1512),
-      tertiary: lightCoral,
-      onTertiary: Colors.white,
-      tertiaryContainer: Color(0xFFFFDAD4),
-      onTertiaryContainer: Color(0xFF410001),
-      surface: lightBackground,
-      onSurface: lightTextPrimary,
-      onSurfaceVariant: lightTextSecondary,
-      outline: Color(0xFFC9BBA6), // Warm sand outline
-      outlineVariant: Color(0xFFD9C9AE), // Soft warm tan outlineVariant
-      error: Color(0xFFBA1A1A),
-      onError: Colors.white,
-      surfaceContainerLowest: lightSurface,
-      surfaceContainerLow: Color(0xFFF7F3EE),
-      surfaceContainer: Color(0xFFEFEAE2),
-      surfaceContainerHigh: lightSurfaceHighlight,
-      surfaceContainerHighest: Color(0xFFE4D9C8),
-    );
+    final colorScheme =
+        dynamicScheme ??
+        ColorScheme.fromSeed(
+          seedColor: primary, // Violet seed
+          brightness: Brightness.light,
+          surface: lightSurface,
+        );
 
     return ThemeData(
       useMaterial3: true,
@@ -231,7 +193,6 @@ class AppTheme {
         backgroundColor: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(
-          fontFamily: 'Outfit',
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: colorScheme.onSurface,
@@ -247,7 +208,7 @@ class AppTheme {
 
       // Card Theme
       cardTheme: CardThemeData(
-        color: colorScheme.surfaceContainerLowest,
+        color: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 1,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -257,59 +218,54 @@ class AppTheme {
       colorScheme: colorScheme,
 
       // Typography
-      textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme)
+      textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme)
           .copyWith(
-            displayLarge: GoogleFonts.outfit(
+            displayLarge: GoogleFonts.inter(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
+              color: lightTextPrimary,
             ),
-            headlineMedium: GoogleFonts.outfit(
+            headlineMedium: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface,
+              color: lightTextPrimary,
             ),
-            titleLarge: GoogleFonts.outfit(
+            titleLarge: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface,
+              color: lightTextPrimary,
             ),
-            bodyLarge: GoogleFonts.outfit(
+            bodyLarge: GoogleFonts.inter(
               fontSize: 16,
-              color: colorScheme.onSurface,
+              color: lightTextPrimary,
             ),
-            bodyMedium: GoogleFonts.outfit(
+            bodyMedium: GoogleFonts.inter(
               fontSize: 14,
-              color: colorScheme.onSurfaceVariant,
-            ),
-            bodySmall: GoogleFonts.outfit(
-              fontSize: 12,
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+              color: lightTextSecondary,
             ),
           ),
 
       // AppBar
-      appBarTheme: AppBarTheme(
-        backgroundColor: colorScheme.surface,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: lightSurface,
         elevation: 0,
         centerTitle: false,
         scrolledUnderElevation: 0,
-        iconTheme: IconThemeData(color: colorScheme.onSurface),
+        iconTheme: IconThemeData(color: lightTextPrimary),
         titleTextStyle: TextStyle(
-          color: colorScheme.onSurface,
+          color: lightTextPrimary,
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          fontFamily: 'Outfit',
         ),
       ),
 
       // Bottom Navigation
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: colorScheme.surface,
-        selectedItemColor: colorScheme.primary,
-        unselectedItemColor: colorScheme.onSurfaceVariant,
+        backgroundColor: lightSurface,
+        selectedItemColor: primary,
+        unselectedItemColor: Colors.grey.shade600,
         type: BottomNavigationBarType.fixed,
-        elevation: 8,
+        elevation: 8, // Little shadow for light mode visibility
         showSelectedLabels: false,
         showUnselectedLabels: false,
       ),
@@ -317,14 +273,14 @@ class AppTheme {
       // Input Decoration
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: colorScheme.surfaceContainerHigh,
+        fillColor: lightSurfaceHighlight,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+          borderSide: const BorderSide(color: primary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -332,72 +288,7 @@ class AppTheme {
         ),
       ),
 
-      // Chip Theme
-      chipTheme: ChipThemeData(
-        backgroundColor: colorScheme.surfaceContainerHigh,
-        disabledColor: colorScheme.onSurface.withValues(alpha: 0.12),
-        selectedColor: colorScheme.primary.withValues(alpha: 0.15),
-        secondarySelectedColor: colorScheme.primary.withValues(alpha: 0.15),
-        labelStyle: TextStyle(color: colorScheme.onSurface),
-        secondaryLabelStyle: TextStyle(color: colorScheme.primary),
-        checkmarkColor: colorScheme.primary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide.none,
-        ),
-      ),
-
-      // Switch Theme
-      switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return colorScheme.primary;
-          }
-          return null;
-        }),
-        trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return colorScheme.primary.withValues(alpha: 0.5);
-          }
-          return null;
-        }),
-      ),
-
-      // Slider Theme
-      sliderTheme: SliderThemeData(
-        activeTrackColor: colorScheme.primary,
-        inactiveTrackColor: colorScheme.primary.withValues(alpha: 0.24),
-        thumbColor: colorScheme.primary,
-        overlayColor: colorScheme.primary.withValues(alpha: 0.12),
-      ),
-
-      // Floating Action Button Theme
-      floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
-
-      // SnackBar Theme
-      snackBarTheme: snackBarThemeFor(colorScheme),
-
-      // Ripple / Splash / Highlights
-      splashColor: colorScheme.primary.withValues(alpha: 0.1),
-      hoverColor: colorScheme.primary.withValues(alpha: 0.04),
-      highlightColor: colorScheme.primary.withValues(alpha: 0.05),
-
-      // Selection Text Theme
-      textSelectionTheme: TextSelectionThemeData(
-        cursorColor: colorScheme.primary,
-        selectionColor: colorScheme.primary.withValues(alpha: 0.3),
-        selectionHandleColor: colorScheme.primary,
-      ),
-
-      dividerColor: colorScheme.outlineVariant,
-      dividerTheme: DividerThemeData(
-        thickness: 1,
-        space: 1,
-        color: colorScheme.outlineVariant,
-      ),
+      dividerColor: Colors.grey.shade200,
     );
   }
 }

@@ -6,9 +6,6 @@ import '../../../../core/extensions/base_provider.dart';
 import '../../../../core/utils/image_fallbacks.dart';
 import '../../../search/presentation/search_provider.dart';
 import 'package:skystream/shared/widgets/multimedia_card.dart';
-import '../../../../shared/widgets/loading_indicator.dart';
-import '../../../../core/providers/device_info_provider.dart';
-import '../../../../core/utils/responsive_breakpoints.dart';
 
 class HomeSearchDelegate extends SearchDelegate<void> {
   final String? initialQuery;
@@ -16,7 +13,6 @@ class HomeSearchDelegate extends SearchDelegate<void> {
   HomeSearchDelegate({this.initialQuery})
     : super(
         searchFieldLabel: 'Search movies, series...',
-        searchFieldStyle: null,
       ) {
     if (initialQuery != null) {
       query = initialQuery!;
@@ -33,6 +29,12 @@ class HomeSearchDelegate extends SearchDelegate<void> {
         iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
         toolbarHeight: 70,
       ),
+      textTheme: theme.textTheme.copyWith(
+        titleLarge: TextStyle(
+          color: theme.colorScheme.onSurface,
+          fontSize: 18,
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: TextStyle(
           color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
@@ -42,12 +44,6 @@ class HomeSearchDelegate extends SearchDelegate<void> {
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: theme.colorScheme.primary,
         selectionColor: theme.colorScheme.primary.withValues(alpha: 0.3),
-      ),
-      textTheme: theme.textTheme.copyWith(
-        titleMedium: TextStyle(
-          color: theme.colorScheme.onSurface,
-          fontSize: 18,
-        ),
       ),
     );
   }
@@ -138,7 +134,7 @@ class _HomeSearchSuggestionsState
 
     if (isLoading) {
       return Center(
-        child: AppLoadingIndicator(
+        child: CircularProgressIndicator(
           color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
         ),
       );
@@ -244,39 +240,16 @@ class _HomeSearchResultsState extends ConsumerState<_HomeSearchResults> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(child: AppLoadingIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (result == null || result!.results.isEmpty) {
-      final profile = ref.watch(deviceProfileProvider).asData?.value;
-      final isTv = profile?.isTv == true || context.isTv;
-      final isWidescreen = isTv || context.isTabletOrLarger;
-      final imageWidth = isWidescreen ? 320.0 : 200.0;
-      final nativeFont = Theme.of(context).textTheme.bodyLarge?.fontFamily;
-
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'No Results Found',
-              style: TextStyle(
-                fontFamily: nativeFont,
-                fontSize: 16.0,
-                fontWeight: FontWeight.w400,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Image.asset(
-              'assets/images/no_results.png',
-              fit: BoxFit.contain,
-              width: imageWidth,
-              errorBuilder: (context, error, stackTrace) =>
-                  const SizedBox.shrink(),
-            ),
-          ],
+        child: Text(
+          'No results found',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       );
     }
