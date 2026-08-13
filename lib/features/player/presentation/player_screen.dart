@@ -681,9 +681,11 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
 
                         return Positioned(
                           bottom:
-                              (controlsVisible
+                              (Platform.isWindows
                                   ? HotstarPlayerStyle.bottomChromeHeight
-                                  : 20.0) +
+                                  : (controlsVisible
+                                      ? HotstarPlayerStyle.bottomChromeHeight
+                                      : 20.0)) +
                               ((100 -
                                       (subtitleSettings?.subtitlePosition ??
                                           100.0)) *
@@ -788,6 +790,9 @@ class _SkyStreamEmbeddedSubtitleViewState
   @override
   void didUpdateWidget(covariant SkyStreamEmbeddedSubtitleView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.controlsVisible != widget.controlsVisible) {
+      setState(() {});
+    }
     _loadCustomFontIfNeeded();
   }
 
@@ -1005,7 +1010,9 @@ class _SkyStreamEmbeddedSubtitleViewState
                 right: 20.0,
                 top: 0.0,
                 bottom: alignment.y > 0
-                    ? (widget.controlsVisible ? 60.0 : 20.0)
+                    ? (Platform.isWindows
+                        ? 20.0 + settings.subElevation
+                        : (widget.controlsVisible ? 60.0 : 20.0))
                     : 0.0,
               ),
               child: Align(

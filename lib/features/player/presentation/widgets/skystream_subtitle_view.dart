@@ -71,6 +71,9 @@ class _SkyStreamSubtitleViewState extends ConsumerState<SkyStreamSubtitleView> {
       _cleanupPositionListener(oldWidget);
       _listenPosition();
     }
+    if (oldWidget.controlsVisible != widget.controlsVisible) {
+      setState(() {});
+    }
     _loadCues();
     _loadCustomFontIfNeeded();
   }
